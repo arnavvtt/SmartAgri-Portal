@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>मंडी भाव | Smart Agriculture Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+        }
+        header {
+            background: #2e7d32;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px;
+        }
+        .date {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .controls input,
+        .controls select {
+            padding: 8px;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        tr:hover {
+            background: #f1f8e9;
+        }
+        .high { color: green; font-weight: bold; }
+        .low { color: red; font-weight: bold; }
+        .normal { color: #ff9800; font-weight: bold; }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🌾 मंडी भाव</h1>
+    <p>Smart Agriculture Portal</p>
+</header>
+
+<div class="container">
+
+    <div class="date" id="todayDate"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <input type="text" id="searchCrop" placeholder="फसल खोजें" onkeyup="filterTable()">
+
+        <select id="mandiFilter" onchange="filterTable()">
+            <option value="">सभी मंडी</option>
+            <option value="दिल्ली">दिल्ली</option>
+            <option value="लखनऊ">लखनऊ</option>
+            <option value="भोपाल">भोपाल</option>
+            <option value="जयपुर">जयपुर</option>
+        </select>
+
+        <select id="sortPrice" onchange="sortTable()">
+            <option value="">मूल्य अनुसार छांटें</option>
+            <option value="low">कम से अधिक</option>
+            <option value="high">अधिक से कम</option>
+        </select>
+    </div>
+
+    <!-- Table -->
+    <table id="mandiTable">
+        <thead>
+            <tr>
+                <th>फसल का नाम</th>
+                <th>मंडी</th>
+                <th>मूल्य (₹ / क्विंटल)</th>
+                <th>स्थिति</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>गेहूं</td><td>दिल्ली</td><td>2250</td><td class="normal">सामान्य</td>
+            </tr>
+            <tr>
+                <td>धान</td><td>लखनऊ</td><td>2100</td><td class="low">कम</td>
+            </tr>
+            <tr>
+                <td>मक्का</td><td>भोपाल</td><td>1950</td><td class="low">कम</td>
+            </tr>
+            <tr>
+                <td>चना</td><td>जयपुर</td><td>5400</td><td class="high">अधिक</td>
+            </tr>
+            <tr>
+                <td>सरसों</td><td>दिल्ली</td><td>5650</td><td class="high">अधिक</td>
+            </tr>
+            <tr>
+                <td>प्याज</td><td>भोपाल</td><td>1600</td><td class="normal">सामान्य</td>
+            </tr>
+            <tr>
+                <td>आलू</td><td>लखनऊ</td><td>1200</td><td class="low">कम</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Chart -->
+    <div class="card">
+        <h2>📊 फसल मूल्य तुलना ग्राफ</h2>
+        <canvas id="priceChart"></canvas>
+    </div>
+
+</div>
+
+<footer>
+    © 2026 Smart Agriculture Portal
+</footer>
+
+<script>
+// Date
+document.getElementById("todayDate").innerText =
+    "आज की तारीख: " + new Date().toLocaleDateString("hi-IN");
+
+// Filter
+function filterTable() {
+    const cropInput = document.getElementById("searchCrop").value.toLowerCase();
+    const mandiValue = document.getElementById("mandiFilter").value;
+    const rows = document.querySelectorAll("#mandiTable tbody tr");
+
+    rows.forEach(row => {
+        const crop = row.cells[0].innerText.toLowerCase();
+        const mandi = row.cells[1].innerText;
+
+        const cropMatch = crop.includes(cropInput);
+        const mandiMatch = mandiValue === "" || mandi === mandiValue;
+
+        row.style.display = (cropMatch && mandiMatch) ? "" : "none";
+    });
+
+    loadChart();
+}
+
+// Sort
+function sortTable() {
+    const tbody = document.querySelector("#mandiTable tbody");
+    const rows = Array.from(tbody.rows);
+    const type = document.getElementById("sortPrice").value;
+
+    if (!type) return;
+
+    rows.sort((a, b) => {
+        const x = parseInt(a.cells[2].innerText);
+        const y = parseInt(b.cells[2].innerText);
+        return type === "low" ? x - y : y - x;
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+    loadChart();
+}
+
+// Chart
+let chart;
+function loadChart() {
+    const crops = [];
+    const prices = [];
+
+    document.querySelectorAll("#mandiTable tbody tr").forEach(row => {
+        if (row.style.display !== "none") {
+            crops.push(row.cells[0].innerText);
+            prices.push(row.cells[2].innerText);
+        }
+    });
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("priceChart"), {
+        type: "bar",
+        data: {
+            labels: crops,
+            datasets: [{
+                label: "₹ प्रति क्विंटल",
+                data: prices
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+
+loadChart();
+</script>
+
+</body>
+</html>
+
