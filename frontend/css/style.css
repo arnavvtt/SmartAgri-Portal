@@ -1,0 +1,115 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+
+.navbar {
+    background-color: #2e7d32;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+}
+
+.nav-links li {
+    margin-left: 20px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* HERO SECTION */
+.hero {
+    height: 80vh;
+    background-color: #f1f8e9;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 42px;
+    color: #2e7d32;
+}
+
+.hero p {
+    margin-top: 15px;
+    font-size: 18px;
+    width: 60%;
+}
+
+/* BUTTONS */
+.hero-buttons {
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 25px;
+    margin: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.primary {
+    background-color: #2e7d32;
+    color: white;
+}
+
+.secondary {
+    background-color: white;
+    border: 2px solid #2e7d32;
+    color: #2e7d32;
+}
+/* ===== SERVICES SECTION (HAMARI SEVAEIN) ===== */
+
+.services {
+    padding: 60px 40px;
+    background-color: #ffffff;
+    text-align: center;
+}
+
+.services h2 {
+    font-size: 32px;
+    color: #2e7d32;
+    margin-bottom: 40px;
+}
+
+/* Services content alignment */
+.services p {
+    max-width: 800px;
+    margin: 15px auto;
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: center;
+
+    /* card-like look */
+    background-color: #f1f8e9;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
