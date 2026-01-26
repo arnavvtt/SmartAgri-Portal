@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Agriculture Portal</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">Smart Agriculture</div>
+    <ul class="nav-links">
+        <li><a href="{% url 'index' %}">Home</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+        <li><a href="{% url 'login' %}">Login</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <h1>किसानों के लिए स्मार्ट कृषि पोर्टल</h1>
+
+    <p>
+        यह पोर्टल किसानों को मौसम की जानकारी, मंडी के ताज़ा भाव और 
+        फसल प्रबंधन की सुविधा एक ही जगह प्रदान करता है।
+    </p>
+
+    <div class="hero-buttons">
+        <a href="{% url 'register' %}" class="btn primary">रजिस्टर करें</a>
+        <a href="{% url 'login' %}" class="btn secondary">लॉगिन करें</a>
+    </div>
+</section>
+
+<section class="services">
+    <h2>हमारी सेवाएं</h2>
+
+    <div class="services-container">
+        <div class="service-card">
+            <h3>🌧️ मौसम की जानकारी</h3>
+            <p>अपने क्षेत्र का ताज़ा मौसम देखें।</p>
+        </div>
+
+        <div class="service-card">
+            <h3>🌾 फसल प्रबंधन</h3>
+            <p>अपनी फसलों का रिकॉर्ड रखें।</p>
+        </div>
+
+        <div class="service-card">
+            <h3>💰 मंडी भाव</h3>
+            <p>नज़दीकी मंडी के ताज़ा भाव।</p>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>
+

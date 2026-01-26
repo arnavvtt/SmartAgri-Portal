@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Smart Agriculture</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">Smart Agriculture</div>
+    <ul class="nav-links">
+        <li><a href="{% url 'index' %}">Home</a></li>
+        <li><a href="{% url 'login' %}">Login</a></li>
+    </ul>
+</nav>
+
+<div class="auth-container">
+    <h2>किसान लॉगिन</h2>
+
+    <!-- 🔥 FIX: auth-form class added -->
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        <label>यूज़रनेम / ईमेल</label>
+        <input type="text" name="username" required>
+
+        <label>पासवर्ड</label>
+        <input type="password" name="password" required>
+
+        <button type="submit" class="btn primary">लॉगिन</button>
+    </form>
+
+    <p class="demo-note">
+        यूज़रनेम: <b>farmer</b> | पासवर्ड: <b>farmer123</b>
+    </p>
+</div>
+
+</body>
+</html>
+
+
