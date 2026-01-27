@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Edit Crop</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label>Crop Name:</label><br>
+    <input type="text" name="name" value="{{ crop.name }}" required><br><br>
+
+    <label>Season:</label><br>
+    <select name="season" required>
+        <option value="Rabi" {% if crop.season == "Rabi" %}selected{% endif %}>Rabi</option>
+        <option value="Kharif" {% if crop.season == "Kharif" %}selected{% endif %}>Kharif</option>
+        <option value="Zaid" {% if crop.season == "Zaid" %}selected{% endif %}>Zaid</option>
+    </select><br><br>
+
+    <label>Area (acres):</label><br>
+    <input type="number" step="0.01" name="area" value="{{ crop.area }}" required><br><br>
+
+    <button type="submit">Update Crop</button>
+</form>
+
+<br>
+<a href="{% url 'my_crops' %}">⬅ Back to My Crops</a>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Mandi Prices</h2>
+<p id="status">Loading mandi data…</p>
+
+<table border="1" cellpadding="8" id="mandi-table" style="display:none">
+  <thead>
+    <tr>
+      <th>State</th>
+      <th>District</th>
+      <th>Market</th>
+      <th>Commodity</th>
+      <th>Min</th>
+      <th>Max</th>
+      <th>Modal</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+fetch("https://raw.githubusercontent.com/upendra35/agmarknet-data/master/Daily_Mandi_Prices.csv")
+  .then(res => res.text())
+  .then(text => {
+    const rows = text.split("\n").slice(1, 15);
+    const tbody = document.querySelector("#mandi-table tbody");
+
+    rows.forEach(r => {
+      const cols = r.split(",");
+      if (cols.length > 6) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${cols[0]}</td>
+          <td>${cols[1]}</td>
+          <td>${cols[2]}</td>
+          <td>${cols[3]}</td>
+          <td>${cols[4]}</td>
+          <td>${cols[5]}</td>
+          <td>${cols[6]}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+
+    document.getElementById("status").style.display = "none";
+    document.getElementById("mandi-table").style.display = "table";
+  })
+  .catch(() => {
+    document.getElementById("status").innerText = "Failed to load mandi data.";
+  });
+</script>
+
+{% endblock %}
+
+

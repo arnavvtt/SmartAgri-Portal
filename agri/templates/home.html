@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Smart Agriculture Portal</h1>
+    <p>
+      One simple platform for farmers to check weather,
+      manage crops, and track mandi prices.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+      <a href="{% url 'register' %}" class="btn btn-outline">Register</a>
+    </div>
+  </div>
+</section>
+
+<!-- What SmartAgri Does -->
+<section class="features">
+  <div class="container">
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <span>🌦️</span>
+        <h3>Weather Updates</h3>
+        <p>Live and location-based weather forecasts.</p>
+      </div>
+
+      <div class="feature-card">
+        <span>🌱</span>
+        <h3>Crop Management</h3>
+        <p>Add, edit, and track your crops easily.</p>
+      </div>
+
+      <div class="feature-card">
+        <span>💹</span>
+        <h3>Mandi Prices</h3>
+        <p>Transparent government mandi price data.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

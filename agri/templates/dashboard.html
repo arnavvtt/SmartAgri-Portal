@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Dashboard</h2>
+<p>Welcome, {{ request.user.username }}</p>
+
+<div class="card-grid">
+
+    <div class="card">
+        <h3>🌦 Weather</h3>
+        <p>Live weather updates for your area</p>
+        <a href="/weather/">Check Weather</a>
+    </div>
+
+    <div class="card">
+        <h3>📊 Mandi Prices</h3>
+        <p>View latest mandi crop prices</p>
+        <a href="/mandi/">View Mandi Prices</a>
+    </div>
+
+    <div class="card">
+    <h3>🌱 Crops</h3>
+    <p>View and manage your crops</p>
+    <a href="/crops/">View My Crops</a>
+</div>
+
+</div>
+{% endblock %}
+

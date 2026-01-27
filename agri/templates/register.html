@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register – SmartAgri</title>
+</head>
+<body>
+
+<h2>Register (New Farmer)</h2>
+
+{% if messages %}
+  {% for message in messages %}
+    <p style="color:red">{{ message }}</p>
+  {% endfor %}
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <label>Username:</label><br>
+  <input type="text" name="username" required><br><br>
+
+  <label>Email:</label><br>
+  <input type="email" name="email" required><br><br>
+
+  <label>Password:</label><br>
+  <input type="password" name="password1" required><br><br>
+
+  <label>Confirm Password:</label><br>
+  <input type="password" name="password2" required><br><br>
+
+  <button type="submit">Create Account</button>
+</form>
+
+<p>Already have an account? <a href="/login/">Login</a></p>
+
+</body>
+</html>

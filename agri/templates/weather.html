@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Weather</h2>
+
+<input type="text" id="cityInput" placeholder="Enter city">
+<button onclick="getWeather()">Get Weather</button>
+
+<p id="status"></p>
+
+<div id="result" style="display:none">
+    <p><strong>City:</strong> <span id="city"></span></p>
+    <p><strong>Temperature:</strong> <span id="temp"></span> °C</p>
+    <p><strong>Humidity:</strong> <span id="humidity"></span> %</p>
+    <p><strong>Condition:</strong> <span id="desc"></span></p>
+</div>
+
+<script>
+function getWeather() {
+    const city = document.getElementById("cityInput").value;
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+
+    if (!city) {
+        status.innerText = "Please enter a city";
+        result.style.display = "none";
+        return;
+    }
+
+    status.innerText = "Fetching weather...";
+    result.style.display = "none";
+
+    fetch(`/api/weather/?city=${city}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                status.innerText = data.error;
+                result.style.display = "none";
+                return;
+            }
+
+            status.innerText = "";
+            result.style.display = "block";
+
+            document.getElementById("city").innerText = data.city;
+            document.getElementById("temp").innerText = data.temp;
+            document.getElementById("humidity").innerText = data.humidity;
+            document.getElementById("desc").innerText = data.description;
+        });
+}
+</script>
+{% endblock %}
