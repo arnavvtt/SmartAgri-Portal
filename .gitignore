@@ -1,0 +1,42 @@
+# -------------------------
+# Python / Django
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Django stuff
+db.sqlite3
+staticfiles/
+
+# -------------------------
+# Virtual Environment
+# -------------------------
+.venv/
+venv/
+env/
+
+# -------------------------
+# Environment variables
+# -------------------------
+.env
+
+# -------------------------
+# VS Code
+# -------------------------
+.vscode/
+
+# -------------------------
+# OS files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Node / Frontend (if any)
+# -------------------------
+node_modules/
+dist/
+build/
