@@ -1,56 +1,119 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandi Price Finder | Krishi Seva</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<h2>Mandi Prices</h2>
-<p id="status">Loading mandi data…</p>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; }
+        .mandi-card { border-radius: 15px; overflow: hidden; }
+        .search-section { background: white; border-radius: 15px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btn-check-prices { background-color: #28a745; color: white; border-radius: 30px; padding: 12px 40px; font-weight: 600; border: none; transition: 0.3s; }
+        .btn-check-prices:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
+        .table-header { background-color: #f8f9fa; text-transform: uppercase; font-size: 0.85rem; color: #6c757d; font-weight: 600; }
+        .badge-success-custom { background-color: #28a745; padding: 8px 16px; font-weight: 500; }
+        /* Style for hybrid inputs */
+        .hybrid-input { height: 50px; border-radius: 10px !important; border: 1px solid #eee !important; }
+        .hybrid-input:focus { border-color: #28a745 !important; box-shadow: none !important; background-color: #fff !important; }
+    </style>
+</head>
+<body>
 
-<table border="1" cellpadding="8" id="mandi-table" style="display:none">
-  <thead>
-    <tr>
-      <th>State</th>
-      <th>District</th>
-      <th>Market</th>
-      <th>Commodity</th>
-      <th>Min</th>
-      <th>Max</th>
-      <th>Modal</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+<div class="container py-5">
+    <h2 class="text-center mb-4" style="color: #28a745;"><i class="fas fa-seedling me-2"></i> Mandi Price Finder</h2>
 
-<script>
-fetch("https://raw.githubusercontent.com/upendra35/agmarknet-data/master/Daily_Mandi_Prices.csv")
-  .then(res => res.text())
-  .then(text => {
-    const rows = text.split("\n").slice(1, 15);
-    const tbody = document.querySelector("#mandi-table tbody");
+    <div class="search-section">
+        <form method="GET" action="{% url 'mandi' %}" class="row g-3">
+            
+            <div class="col-md-4">
+                <label class="form-label fw-bold text-secondary">State (Rajya)</label>
+                <input type="text" name="state" list="stateOptions" class="form-control hybrid-input bg-light" 
+                       placeholder="Type or Select State" value="{{ searched.state|default:'' }}">
+                <datalist id="stateOptions">
+                    {% for s in valid_states %}
+                    <option value="{{ s }}">
+                    {% endfor %}
+                </datalist>
+            </div>
 
-    rows.forEach(r => {
-      const cols = r.split(",");
-      if (cols.length > 6) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${cols[0]}</td>
-          <td>${cols[1]}</td>
-          <td>${cols[2]}</td>
-          <td>${cols[3]}</td>
-          <td>${cols[4]}</td>
-          <td>${cols[5]}</td>
-          <td>${cols[6]}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
+            <div class="col-md-4">
+                <label class="form-label fw-bold text-secondary">District (Zila)</label>
+                <input type="text" name="district" class="form-control hybrid-input bg-light" 
+                       placeholder="E.g. Ghaziabad" value="{{ searched.district|default:'' }}">
+            </div>
 
-    document.getElementById("status").style.display = "none";
-    document.getElementById("mandi-table").style.display = "table";
-  })
-  .catch(() => {
-    document.getElementById("status").innerText = "Failed to load mandi data.";
-  });
-</script>
+            <div class="col-md-4">
+                <label class="form-label fw-bold text-secondary">Commodity (Fasal)</label>
+                <input type="text" name="commodity" list="cropOptions" class="form-control hybrid-input bg-light" 
+                       placeholder="Type or Select Crop" value="{{ searched.commodity|default:'' }}">
+                <datalist id="cropOptions">
+                    {% for c in valid_commodities %}
+                    <option value="{{ c }}">
+                    {% endfor %}
+                </datalist>
+            </div>
 
-{% endblock %}
+            <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-check-prices shadow-sm">
+                    <i class="fas fa-search me-2"></i> Check Prices (Bhaav Dekhein)
+                </button>
+            </div>
+        </form>
+    </div>
 
+    {% if message %}
+    <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm mb-4" style="border-left: 5px solid #ffc107; background-color: #fff;">
+        <i class="fas fa-info-circle me-2 text-warning"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
 
+    <div class="card mandi-card border-0 shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="ps-4">Market (Mandi)</th>
+                            <th>District</th>
+                            <th>Commodity</th>
+                            <th>Variety</th>
+                            <th>Min Price</th>
+                            <th>Max Price</th>
+                            <th class="pe-4">Modal Price (Avg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in mandi_data %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">{{ item.market }}</td>
+                            <td class="text-muted">{{ item.district }}</td>
+                            <td><span class="badge rounded-pill badge-success-custom">{{ item.commodity }}</span></td>
+                            <td class="text-secondary">{{ item.variety }}</td>
+                            <td class="fw-medium text-dark">₹{{ item.min_price }}</td>
+                            <td class="fw-medium text-dark">₹{{ item.max_price }}</td>
+                            <td class="pe-4 fw-bold text-success" style="font-size: 1.15rem;">₹{{ item.modal_price }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-search-location fa-3x text-light mb-3"></i>
+                                <p class="text-muted mb-0">No data found. Try searching with different filters.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
