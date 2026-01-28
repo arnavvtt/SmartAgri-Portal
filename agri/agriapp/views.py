@@ -34,7 +34,7 @@ def dashboard(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('/login/')
+    return redirect('/')
 
 @login_required
 def weather_view(request):
