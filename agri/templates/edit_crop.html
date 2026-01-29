@@ -1,27 +1,143 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<h2>Edit Crop</h2>
+<style>
+    :root {
+        --primary-main: #2E7D32;
+        --primary-deep: #1B5E20;
+        --bg-light: #F9FBF9;
+        --earth-brown: #795548;
+    }
 
-<form method="post">
-    {% csrf_token %}
+    .edit-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 0 20px;
+    }
 
-    <label>Crop Name:</label><br>
-    <input type="text" name="name" value="{{ crop.name }}" required><br><br>
+    .edit-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #E0E0E0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
 
-    <label>Season:</label><br>
-    <select name="season" required>
-        <option value="Rabi" {% if crop.season == "Rabi" %}selected{% endif %}>Rabi</option>
-        <option value="Kharif" {% if crop.season == "Kharif" %}selected{% endif %}>Kharif</option>
-        <option value="Zaid" {% if crop.season == "Zaid" %}selected{% endif %}>Zaid</option>
-    </select><br><br>
+    .card-header-agri {
+        background: var(--primary-main);
+        color: white;
+        padding: 25px;
+        text-align: center;
+    }
 
-    <label>Area (acres):</label><br>
-    <input type="number" step="0.01" name="area" value="{{ crop.area }}" required><br><br>
+    .form-body { padding: 30px; }
 
-    <button type="submit">Update Crop</button>
-</form>
+    .form-label {
+        font-weight: 700;
+        color: var(--earth-brown);
+        margin-bottom: 8px;
+        display: block;
+    }
 
-<br>
-<a href="{% url 'my_crops' %}">⬅ Back to My Crops</a>
+    .label-hin {
+        font-size: 0.8rem;
+        color: var(--primary-main);
+        font-weight: 500;
+    }
+
+    .form-control-agri {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 10px;
+        border: 2px solid #EEE;
+        transition: 0.3s;
+        margin-bottom: 20px;
+    }
+
+    .form-control-agri:focus {
+        border-color: var(--primary-main);
+        outline: none;
+        box-shadow: 0 0 10px rgba(46, 125, 50, 0.1);
+    }
+
+    .btn-update {
+        background: var(--primary-main);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: 0.3s;
+    }
+
+    .btn-update:hover {
+        background: var(--primary-deep);
+        transform: translateY(-2px);
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover { color: var(--primary-main); }
+</style>
+
+<div class="edit-container">
+    <div class="edit-card">
+        <div class="card-header-agri">
+            <h3 class="mb-0">🌱 Edit Crop Details</h3>
+            <small>Fasal ki jankari badlein</small>
+        </div>
+
+        <div class="form-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Crop Name <span class="label-hin">/ फसल का नाम</span>
+                    </label>
+                    <input type="text" name="name" class="form-control-agri" 
+                           value="{{ crop.name }}" placeholder="e.g. Wheat, Tomato" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Season <span class="label-hin">/ मौसम</span>
+                    </label>
+                    <select name="season" class="form-control-agri" required>
+                        <option value="Rabi" {% if crop.season == "Rabi" %}selected{% endif %}>Rabi (Winter / रबी)</option>
+                        <option value="Kharif" {% if crop.season == "Kharif" %}selected{% endif %}>Kharif (Monsoon / खरीफ)</option>
+                        <option value="Zaid" {% if crop.season == "Zaid" %}selected{% endif %}>Zaid (Summer / ज़ैद)</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">
+                        Area in Acres <span class="label-hin">/ एकड़ में क्षेत्र</span>
+                    </label>
+                    <input type="number" step="0.01" name="area" class="form-control-agri" 
+                           value="{{ crop.area }}" required>
+                </div>
+
+                <button type="submit" class="btn-update">
+                    Update Crop / जानकारी अपडेट करें
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <a href="{% url 'my_crops' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to My Crops / वापस जाएं
+    </a>
+</div>
+
 {% endblock %}
