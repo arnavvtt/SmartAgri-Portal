@@ -6,69 +6,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        /* --- GLOBAL ORGANIC SYSTEM --- */
+        :root {
+            --primary-deep: #1B5E20;      
+            --primary-main: #2E7D32;      
+            --primary-light: #E8F5E9;     
+            --text-muted: #616161;
+            --error-red: #D32F2F;
+        }
+
         * {
             box-sizing: border-box;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Inter", "Segoe UI", sans-serif;
         }
 
         body {
             margin: 0;
-            height: 100vh;
-            background: linear-gradient(
-                to bottom right,
-                #f1f8e9,
-                #e8f5e9
-            );
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 40px 20px; /* Extra padding for long forms on mobile */
         }
 
+        /* --- REGISTER CARD --- */
         .register-container {
             background: #ffffff;
-            padding: 38px 34px;
-            width: 400px;
-            border-radius: 16px;
-            border-top: 7px solid #2e7d32;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.15);
-            transition: 0.3s ease;
-            animation: fadeIn 0.6s ease;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            border-bottom: 6px solid var(--primary-main);
+            box-shadow: 0 15px 40px rgba(27, 94, 32, 0.12);
+            animation: slideUp 0.6s ease-out;
         }
 
-        .register-container:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 22px 45px rgba(0,0,0,0.18);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 8px;
-            color: #2e7d32;
-            letter-spacing: 0.5px;
+            margin: 0 0 8px 0;
+            color: var(--primary-deep);
+            font-weight: 800;
+            font-size: 1.8rem;
         }
 
-        p.subtitle {
+        .subtitle {
             text-align: center;
-            font-size: 14px;
-            color: #6b6b6b;
+            font-size: 0.95rem;
+            color: var(--text-muted);
             margin-bottom: 30px;
         }
 
+        /* --- FORM ELEMENTS --- */
         label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #3e3e3e;
+            display: block;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--primary-deep);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
 
         .input-group {
@@ -78,82 +80,85 @@
 
         .input-group::before {
             position: absolute;
-            left: 12px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 16px;
-            opacity: 0.6;
+            z-index: 2;
+            opacity: 0.7;
         }
 
         .user::before { content: "👤"; }
-        .email::before { content: "📧"; }
-        .lock::before { content: "🔒"; }
+        .email::before { content: "✉️"; }
+        .lock::before { content: "🔑"; }
 
         input {
             width: 100%;
-            padding: 11px 11px 11px 38px;
-            border-radius: 8px;
-            border: 1px solid #c5e1a5;
+            padding: 12px 12px 12px 42px;
+            border-radius: 12px;
+            border: 2px solid #E0E0E0;
             outline: none;
-            transition: 0.3s;
-            background: #fbfff8;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            background: #FDFDFD;
         }
 
         input:focus {
-            border-color: #2e7d32;
-            box-shadow: 0 0 6px rgba(46,125,50,0.35);
+            border-color: var(--primary-main);
             background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
         }
 
+        /* --- BUTTONS --- */
         button {
             width: 100%;
-            padding: 13px;
-            background: linear-gradient(
-                to right,
-                #2e7d32,
-                #43a047
-            );
+            padding: 15px;
+            background-color: var(--primary-main);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             color: white;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: 0.3s;
-            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            margin-top: 15px;
         }
 
         button:hover {
-            background: linear-gradient(
-                to right,
-                #1b5e20,
-                #2e7d32
-            );
+            background-color: var(--primary-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.2);
         }
 
+        /* --- ALERTS --- */
         .messages {
-            text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .messages p {
-            color: #c62828;
-            font-size: 14px;
+            background: #FFEBEE;
+            color: var(--error-red);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9rem;
             font-weight: 600;
+            border: 1px solid #FFCDD2;
+            margin: 0;
         }
 
+        /* --- FOOTER --- */
         .footer-text {
             text-align: center;
-            margin-top: 24px;
-            font-size: 13px;
-            color: #5f5f5f;
-            line-height: 1.6;
+            margin-top: 30px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
         }
 
         .footer-text a {
-            color: #2e7d32;
+            color: var(--primary-main);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .footer-text a:hover {
@@ -165,13 +170,13 @@
 <body>
 
 <div class="register-container">
-    <h2>Farmer Registration 🌾</h2>
-    <p class="subtitle">Smart Agriculture Management System</p>
+    <h2>Join SmartAgri 🌾</h2>
+    <p class="subtitle">Start managing your crops smarter</p>
 
     {% if messages %}
     <div class="messages">
         {% for message in messages %}
-            <p>{{ message }}</p>
+            <p>⚠️ {{ message }}</p>
         {% endfor %}
     </div>
     {% endif %}
@@ -186,26 +191,28 @@
 
         <label>Email Address</label>
         <div class="input-group email">
-            <input type="email" name="email" placeholder="Enter your email" required>
+            <input type="email" name="email" placeholder="farmer@example.com" required>
         </div>
 
         <label>Password</label>
         <div class="input-group lock">
-            <input type="password" name="password1" placeholder="Create a password" required>
+            <input type="password" name="password1" placeholder="Create password" required>
         </div>
 
         <label>Confirm Password</label>
         <div class="input-group lock">
-            <input type="password" name="password2" placeholder="Re-enter password" required>
+            <input type="password" name="password2" placeholder="Repeat password" required>
         </div>
 
-        <button type="submit">Create Account</button>
+        <button type="submit">Create Free Account</button>
     </form>
 
     <div class="footer-text">
-        Already have an account?
-        <a href="/login/">Login here</a><br>
-        🌱 Empowering Farmers with Smart Technology
+        Already a member? 
+        <a href="/login/">Login here</a>
+        <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.6;">
+            🌱 Empowering Agriculture through Technology
+        </div>
     </div>
 </div>
 
