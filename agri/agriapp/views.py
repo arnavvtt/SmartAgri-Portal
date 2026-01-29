@@ -10,7 +10,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from difflib import get_close_matches
+
+# NEW IMPORTS - Step 2-4
 from .crop_weather_rules import get_crop_rules, get_season_rules, CROP_KNOWLEDGE_BASE
+from .city_state_map import get_state_from_city
+from .weather_forecast import get_7day_forecast, analyze_forecast_unpredictability, get_forecast_summary_en, get_forecast_summary_hi
+from .state_risks import get_state_risk_advisories, get_risk_summary_en, get_risk_summary_hi
 
 # ========================================
 # EXISTING VIEWS (UNTOUCHED)
@@ -64,7 +69,7 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 # ========================================
-# WEATHER VIEW
+# ENHANCED WEATHER VIEW (STEP 2-4)
 # ========================================
 
 @login_required
@@ -76,26 +81,70 @@ def weather_view(request):
     else:
         city = request.session.get('user_city', 'Delhi')
     
+    # Get current weather
     weather_data = get_weather_data(city)
     user_crops = Crop.objects.filter(user=request.user)
     
+    # Get state from city
+    state = get_state_from_city(city)
+    
+    # Get 7-day forecast and analysis
+    forecast_data = None
+    forecast_analysis = None
+    forecast_summary_en = None
+    forecast_summary_hi = None
+    
+    if weather_data.get('lat') and weather_data.get('lon'):
+        daily_forecasts = get_7day_forecast(weather_data['lat'], weather_data['lon'])
+        if daily_forecasts:
+            forecast_data = daily_forecasts
+            forecast_analysis = analyze_forecast_unpredictability(daily_forecasts)
+            if forecast_analysis:
+                forecast_summary_en = get_forecast_summary_en(forecast_analysis)
+                forecast_summary_hi = get_forecast_summary_hi(forecast_analysis)
+    
+    # Get state-based risk advisories
+    state_risks = []
+    state_risk_summary_en = None
+    state_risk_summary_hi = None
+    
+    if state:
+        state_risks = get_state_risk_advisories(state)
+        state_risk_summary_en = get_risk_summary_en(state)
+        state_risk_summary_hi = get_risk_summary_hi(state)
+    
+    # Get crop insights (existing logic)
     all_crop_insights = []
     for crop in user_crops:
-        insights = get_crop_weather_insights(crop.name, weather_data)
+        insights = get_crop_weather_insights(crop.name, weather_data, forecast_analysis)
         all_crop_insights.append({
             'crop': crop,
             'insights': insights
         })
     
-    # Generate daily insights
+    # Generate daily insights (existing logic)
     daily_insights = generate_daily_farm_insights(all_crop_insights, weather_data)
     
     context = {
         "city": weather_data['city'],
+        "state": state if state else "Unknown Region",
         "temp": weather_data['temp'],
         "humidity": weather_data['humidity'],
         "description": weather_data['description'],
         "weather": weather_data,
+        
+        # 7-day forecast data
+        "forecast_data": forecast_data,
+        "forecast_analysis": forecast_analysis,
+        "forecast_summary_en": forecast_summary_en,
+        "forecast_summary_hi": forecast_summary_hi,
+        
+        # State risk data
+        "state_risks": state_risks,
+        "state_risk_summary_en": state_risk_summary_en,
+        "state_risk_summary_hi": state_risk_summary_hi,
+        
+        # Existing data
         "all_crop_insights": all_crop_insights,
         "farm_summary": daily_insights['farm_summary'],
         "priority_actions": daily_insights['priority_actions'],
@@ -103,7 +152,7 @@ def weather_view(request):
     return render(request, "weather.html", context)
 
 # ========================================
-# WEATHER API HELPER
+# WEATHER API HELPER (ENHANCED)
 # ========================================
 
 def get_weather_data(city="Delhi"):
@@ -120,18 +169,22 @@ def get_weather_data(city="Delhi"):
             'temp': round(data['main']['temp']),
             'humidity': data['main']['humidity'],
             'description': data['weather'][0]['description'],
-            'city': city.title()
+            'city': city.title(),
+            'lat': data['coord']['lat'],  # NEW - for forecast API
+            'lon': data['coord']['lon']   # NEW - for forecast API
         }
     except:
         return {
             'temp': 25,
             'humidity': 60,
             'description': 'clear sky',
-            'city': city.title()
+            'city': city.title(),
+            'lat': None,
+            'lon': None
         }
 
 # ========================================
-# OTHER VIEWS
+# OTHER VIEWS (UNCHANGED)
 # ========================================
 
 @login_required
@@ -226,10 +279,14 @@ def register_view(request):
     return render(request, "register.html")
 
 # ========================================
-# CROP WEATHER INTELLIGENCE
+# ENHANCED CROP WEATHER INTELLIGENCE (STEP 4)
 # ========================================
 
-def get_crop_weather_insights(crop_name, weather_data):
+def get_crop_weather_insights(crop_name, weather_data, forecast_analysis=None):
+    """
+    Generate bilingual weather advisories for a specific crop
+    Enhanced with 7-day forecast analysis
+    """
     temp = weather_data['temp']
     humidity = weather_data['humidity']
     description = weather_data['description'].lower()
@@ -244,7 +301,24 @@ def get_crop_weather_insights(crop_name, weather_data):
         heat_threshold = crop_rules['heat_stress_threshold']
         water_need = crop_rules['water_requirement']
         
-        if temp >= heat_threshold:
+        # === TEMPERATURE ANALYSIS (ENHANCED) ===
+        
+        # Check for extended heat stress from forecast
+        extended_heat = False
+        if forecast_analysis and forecast_analysis.get('max_consecutive_hot') >= 3:
+            extended_heat = True
+            insights.append({
+                'advisory_key': 'EXTENDED_HEAT_STRESS',
+                'message_en': f'⚠️ Extended heat period ({forecast_analysis["max_consecutive_hot"]} days) will stress {crop_name}',
+                'message_hi': f'⚠️ लंबी गर्मी की अवधि ({forecast_analysis["max_consecutive_hot"]} दिन) {crop_name_hi} को तनाव देगी',
+                'alert_type': 'danger',
+                'suggested_action_en': f'Plan increased irrigation for next {forecast_analysis["max_consecutive_hot"]} days. Consider mulching to retain moisture.',
+                'suggested_action_hi': f'अगले {forecast_analysis["max_consecutive_hot"]} दिनों के लिए बढ़ी हुई सिंचाई की योजना बनाएं। नमी बनाए रखने के लिए मल्चिंग पर विचार करें।',
+                'icon': '🔥'
+            })
+        
+        # Current day temperature stress
+        if temp >= heat_threshold and not extended_heat:
             insights.append({
                 'advisory_key': 'HEAT_STRESS_CRITICAL',
                 'message_en': f'⚠️ Critical heat stress for {crop_name}',
@@ -284,6 +358,21 @@ def get_crop_weather_insights(crop_name, weather_data):
                 'suggested_action_hi': 'सामान्य खेती जारी रखें।',
                 'icon': '✅'
             })
+        
+        # === UNPREDICTABILITY WARNING ===
+        
+        if forecast_analysis and forecast_analysis.get('stability_score') == 'HIGHLY UNSTABLE':
+            insights.append({
+                'advisory_key': 'WEATHER_UNPREDICTABLE',
+                'message_en': f'Unstable weather pattern this week - risky for {crop_name}',
+                'message_hi': f'इस सप्ताह अस्थिर मौसम पैटर्न - {crop_name_hi} के लिए जोखिम भरा',
+                'alert_type': 'warning',
+                'suggested_action_en': 'Delay major farming decisions (spraying, fertilizing). Monitor daily weather.',
+                'suggested_action_hi': 'प्रमुख खेती के निर्णयों (छिड़काव, उर्वरक) में देरी करें। दैनिक मौसम की निगरानी करें।',
+                'icon': '⚠️'
+            })
+        
+        # === IRRIGATION ANALYSIS ===
         
         if 'rain' in description or 'drizzle' in description:
             insights.append({
@@ -327,6 +416,8 @@ def get_crop_weather_insights(crop_name, weather_data):
                     'icon': '💧'
                 })
         
+        # === DISEASE RISK ===
+        
         if humidity > 80:
             insights.append({
                 'advisory_key': 'FUNGAL_RISK',
@@ -337,7 +428,9 @@ def get_crop_weather_insights(crop_name, weather_data):
                 'suggested_action_hi': 'पत्तियों पर धब्बे देखें। हवा का संचार अच्छा रखें।',
                 'icon': '🍄'
             })
+    
     else:
+        # Fallback for unknown crops
         if temp > 35:
             insights.append({
                 'advisory_key': 'GENERIC_HEAT',
