@@ -263,11 +263,13 @@ body {
                 </div>
                 
                 {% for insight in item.insights %}
-                <div class="insight-compact {{ insight.type }}">
-                    <strong class="eng-msg">{{ insight.icon }} {{ insight.message }}</strong>
-                    <small class="hin-msg">💡 {{ insight.action }}</small>
-                </div>
-                {% endfor %}
+                <div class="insight-compact {{ insight.alert_type }}"> 
+        
+                 <strong>{{ insight.icon }} {{ insight.message_en }}</strong><br>
+        
+               <small style="color: var(--text-muted);">💡 {{ insight.suggested_action_en }}</small>
+            </div>
+         {% endfor %}
 
                 <button class="btn-refresh-compact refresh-insight mt-2" data-crop="{{ item.crop.name }}">
                     🔄 Refresh Analysis / ताज़ा करें
