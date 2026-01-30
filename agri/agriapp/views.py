@@ -30,6 +30,10 @@ from .utils import generate_farm_summary
 def home(request):
     return render(request, "home.html")
 
+def about(request):
+    return render(request, "about.html")
+
+
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* SAME UI FEEL LIKE WEATHER PAGE */
+    .about-wrapper{
+        background: linear-gradient(180deg, #f3fbf6 0%, #ffffff 70%);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+
+    .about-card{
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        padding: 30px;
+    }
+
+    .about-title{
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1b5e20;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .about-subtitle{
+        color: #2e7d32;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .feature-box{
+        background: #f1fbf3;
+        border: 1px solid rgba(46,125,50,0.2);
+        border-radius: 16px;
+        padding: 18px;
+        height: 100%;
+        transition: 0.3s ease;
+    }
+
+    .feature-box:hover{
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .feature-icon{
+        font-size: 28px;
+    }
+
+    .feature-title{
+        font-weight: 800;
+        margin-top: 10px;
+        color: #1b5e20;
+    }
+
+    .feature-text{
+        color: #444;
+        font-size: 0.95rem;
+        margin-top: 6px;
+    }
+
+    .btn-green{
+        background: #2e7d32;
+        color: white;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 700;
+        border: none;
+        transition: 0.3s ease;
+    }
+
+    .btn-green:hover{
+        background: #1b5e20;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="about-wrapper">
+    <div class="container">
+
+        <!-- TOP ABOUT CARD -->
+        <div class="about-card mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <div class="about-title">🌿 About SmartAgri Portal</div>
+                    <div class="about-subtitle">
+                        Smart farming insights for better crop planning & productivity
+                    </div>
+                </div>
+
+                <a href="{% url 'dashboard' %}" class="btn btn-green">
+                    ← Back to Dashboard
+                </a>
+            </div>
+
+            <hr class="my-4">
+
+            <p style="color:#333; font-size: 1.05rem; line-height: 1.7;">
+                <b>SmartAgri Portal</b> is a farmer-friendly web platform that helps users
+                manage crops, check weather conditions, and view mandi prices in one place.
+                The goal is to make farming decisions smarter, faster and more reliable using
+                data-driven insights.
+            </p>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon">🌦️</div>
+                    <div class="feature-title">Weather Insights</div>
+                    <div class="feature-text">
+                        Get temperature, humidity and sky condition updates for your city
+                        with simple search.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon">🌾</div>
+                    <div class="feature-title">Crop Management</div>
+                    <div class="feature-text">
+                        Add crops, track your farming records and get crop suitability tips.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Mandi Prices</div>
+                    <div class="feature-text">
+                        Check mandi rates based on commodity, state and district to plan selling.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXTRA SECTION -->
+        <div class="about-card mt-4">
+            <h4 style="font-weight:800; color:#1b5e20;">✨ Why SmartAgri?</h4>
+            <ul style="margin-top: 12px; color:#333; line-height: 1.8;">
+                <li>Easy-to-use dashboard for farmers</li>
+                <li>Weather based crop suggestions</li>
+                <li>Accurate mandi price search</li>
+                <li>Clean organic theme UI</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+
