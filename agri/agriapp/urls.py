@@ -26,4 +26,6 @@ urlpatterns = [
     
     # Mandi Prices
     path('mandi/', views.mandi_view, name='mandi'),
+
+    path('farm_planner/', views.farm_planner, name='farm_planner'),
 ]

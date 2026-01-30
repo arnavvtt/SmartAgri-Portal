@@ -190,6 +190,12 @@
                             <td class="pe-4 price-bold text-success">₹{{ item.modal_price }}</td>
                         </tr>
                         {% empty %}
+                        {% if message %}
+                        <div class="alert alert-info text-center" style="margin-top:20px;">
+                        {{ message }}
+                        </div>
+                        {% endif %}
+
                         <tr>
                             <td colspan="6" class="text-center py-5">
                                 <h4 class="text-muted fw-bold">No results found / कोई जानकारी नहीं मिली</h4>
