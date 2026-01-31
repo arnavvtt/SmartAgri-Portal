@@ -1,47 +1,61 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-:root {
-    --primary-deep: #1B5E20;
-    --primary-main: #2E7D32;
-    --primary-light: #E8F5E9;
-    --accent-earth: #795548;
-}
+    :root {
+        --primary-deep: #1B5E20;
+        --primary-main: #2E7D32;
+        --primary-light: #E8F5E9;
+        --accent-earth: #795548;
+    }
 
-.card:hover { 
-    transform: translateY(-8px); 
-    transition: all 0.3s ease;
-}
+    .card:hover {
+        transform: translateY(-8px);
+        transition: all 0.3s ease;
+    }
 
-.weather-banner {
-    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
-    border-radius: 15px;
-    padding: 20px;
-    color: white;
-    margin-bottom: 30px;
-    box-shadow: 0 6px 20px rgba(27,94,32,0.3);
-}
+    .weather-banner {
+        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+        border-radius: 15px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 6px 20px rgba(27, 94, 32, 0.3);
+    }
 
-.alert-badge {
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    display: inline-block;
-    margin: 5px;
-}
+    .alert-badge {
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        margin: 5px;
+    }
 
-.alert-warning { background: #FFFDE7; color: #F57F17; border: 1px solid #FBC02D; }
-.alert-danger { background: #FFEBEE; color: #C62828; border: 1px solid #D32F2F; }
-.alert-info { background: #E3F2FD; color: #1976D2; border: 1px solid #1976D2; }
+    .alert-warning {
+        background: #FFFDE7;
+        color: #F57F17;
+        border: 1px solid #FBC02D;
+    }
 
-.savings-highlight {
-    background: #E8F5E9;
-    border-left: 5px solid #2E7D32;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 20px;
-}
+    .alert-danger {
+        background: #FFEBEE;
+        color: #C62828;
+        border: 1px solid #D32F2F;
+    }
+
+    .alert-info {
+        background: #E3F2FD;
+        color: #1976D2;
+        border: 1px solid #1976D2;
+    }
+
+    .savings-highlight {
+        background: #E8F5E9;
+        border-left: 5px solid #2E7D32;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
 </style>
 
 <div class="container py-5">
@@ -49,7 +63,8 @@
     <div class="row mb-4">
         <div class="col-lg-8 mx-auto text-center">
             <h1 class="display-5 fw-bold" style="color: var(--primary-deep);">🚜 Smart Farm Planner</h1>
-            <p class="lead text-muted">Weather-optimized resource planning for <strong>{{ total_area }} Acres</strong></p>
+            <p class="lead text-muted">Weather-optimized resource planning for <strong>{{ total_area }} Acres</strong>
+            </p>
             <div style="width: 100px; height: 4px; background: var(--primary-main); margin: 20px auto;"></div>
         </div>
     </div>
@@ -60,7 +75,9 @@
             <div class="col-md-8">
                 <h5 class="fw-bold mb-2">📍 Current Location: {{ city }}, {{ state }}</h5>
                 <p class="mb-0" style="font-size: 1.1rem; opacity: 0.95;">
-                    🌡️ {{ weather.temp }}°C &nbsp;|&nbsp; 💧 {{ weather.humidity }}% &nbsp;|&nbsp; {{ weather.description|title }}
+                    🌡️ {{ weather.temp|default:"25" }}°C &nbsp;|&nbsp;
+                    💧 {{ weather.humidity|default:"65" }}% &nbsp;|&nbsp;
+                    {{ weather.description|default:"Clear Sky"|title }}
                 </p>
             </div>
             <div class="col-md-4 text-end">
@@ -110,7 +127,7 @@
                 <!-- RESOURCE CALCULATIONS -->
                 <div class="card-body p-4 bg-white">
                     <h6 class="text-uppercase text-muted fw-bold small mb-4">Required Supplies</h6>
-                    
+
                     <!-- WATER (with multiplier indicator) -->
                     <div class="d-flex align-items-center mb-3">
                         <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">💧</div>
@@ -122,14 +139,10 @@
                                 {% if item.water_multiplier == 0 %}
                                 (Saved due to rain ✅)
                                 {% elif item.water_multiplier > 1 %}
-                                {{ item.water_change_percent }}%
-
+                                (+{{ item.water_change_percent }}% increase)
                                 {% else %}
                                 (-{{ item.water_change_percent }}% reduced ✅)
-                                 {% endif %}
-
-                                
-                        
+                                {% endif %}
                             </small>
                             {% endif %}
                         </div>
@@ -154,14 +167,18 @@
                     <!-- IRRIGATION ADVICE -->
                     <div class="pt-3 border-top">
                         <strong style="font-size: 0.85rem; color: var(--primary-deep);">💡 Today's Action:</strong>
-                        <p class="mb-2 mt-1" style="font-size: 0.9rem; font-weight: 600;">{{ item.irrigation_advice }}</p>
+                        <p class="mb-2 mt-1" style="font-size: 0.9rem; font-weight: 600;">{{ item.irrigation_advice }}
+                        </p>
                     </div>
 
                     <!-- STATE RISK ALERT (if applicable) -->
                     {% if item.state_alert %}
-                    <div class="mt-3 p-2" style="background: #FFF3E0; border-left: 4px solid #F57F17; border-radius: 5px;">
-                        <small class="fw-bold" style="color: #F57F17;">{{ item.state_alert.icon }} {{ item.state_alert.name_en }}</small>
-                        <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #666;">{{ item.state_alert.farm_impact_en }}</p>
+                    <div class="mt-3 p-2"
+                        style="background: #FFF3E0; border-left: 4px solid #F57F17; border-radius: 5px;">
+                        <small class="fw-bold" style="color: #F57F17;">{{ item.state_alert.icon }} {{
+                            item.state_alert.name_en }}</small>
+                        <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #666;">{{ item.state_alert.farm_impact_en
+                            }}</p>
                     </div>
                     {% endif %}
 
@@ -179,12 +196,14 @@
                     <!-- WATER SAVINGS HIGHLIGHT -->
                     {% if item.water_saved > 0 %}
                     <div class="savings-highlight mt-3">
-                        <strong style="color: var(--primary-deep); font-size: 0.9rem;">💰 Water Saved: {{ item.water_saved|floatformat:0 }} Liters</strong>
-                        <p class="mb-0 mt-1" style="font-size: 0.8rem; color: #666;">Due to rain forecast - saves cost & resources!</p>
+                        <strong style="color: var(--primary-deep); font-size: 0.9rem;">💰 Water Saved: {{
+                            item.water_saved|floatformat:0 }} Liters</strong>
+                        <p class="mb-0 mt-1" style="font-size: 0.8rem; color: #666;">Due to rain forecast - saves cost &
+                            resources!</p>
                     </div>
                     {% endif %}
                 </div>
-                
+
                 <div class="card-footer bg-light border-0 py-3 text-center">
                     <small class="text-muted fst-italic">"Weather-adjusted precision data"</small>
                 </div>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Register | Smart Agriculture Portal</title>
@@ -8,9 +9,9 @@
     <style>
         /* --- GLOBAL ORGANIC SYSTEM --- */
         :root {
-            --primary-deep: #1B5E20;      
-            --primary-main: #2E7D32;      
-            --primary-light: #E8F5E9;     
+            --primary-deep: #1B5E20;
+            --primary-main: #2E7D32;
+            --primary-light: #E8F5E9;
             --text-muted: #616161;
             --error-red: #D32F2F;
         }
@@ -27,7 +28,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px; /* Extra padding for long forms on mobile */
+            padding: 40px 20px;
+            /* Extra padding for long forms on mobile */
         }
 
         /* --- REGISTER CARD --- */
@@ -43,8 +45,15 @@
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         h2 {
@@ -88,9 +97,17 @@
             opacity: 0.7;
         }
 
-        .user::before { content: "👤"; }
-        .email::before { content: "✉️"; }
-        .lock::before { content: "🔑"; }
+        .user::before {
+            content: "👤";
+        }
+
+        .email::before {
+            content: "✉️";
+        }
+
+        .lock::before {
+            content: "🔑";
+        }
 
         input {
             width: 100%;
@@ -164,58 +181,180 @@
         .footer-text a:hover {
             text-decoration: underline;
         }
+
+        /* --- REAL-TIME VALIDATION --- */
+        .error-text {
+            font-size: 0.75rem;
+            color: var(--error-red);
+            margin-top: 6px;
+            display: none;
+        }
+
+        .success-text {
+            font-size: 0.75rem;
+            color: var(--primary-main);
+            margin-top: 6px;
+            display: none;
+        }
+
+        .rule-list {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            padding-left: 18px;
+        }
+
+        .rule-list li {
+            color: var(--text-muted);
+        }
+
+        .rule-list li.valid {
+            color: var(--primary-main);
+            font-weight: 600;
+        }
     </style>
 </head>
 
 <body>
 
-<div class="register-container">
-    <h2>Join SmartAgri 🌾</h2>
-    <p class="subtitle">Start managing your crops smarter</p>
+    <div class="register-container">
+        <h2>Join SmartAgri 🌾</h2>
+        <p class="subtitle">Start managing your crops smarter</p>
 
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
             <p>⚠️ {{ message }}</p>
-        {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label>Username</label>
+            <div class="input-group user">
+                <input type="text" name="username" placeholder="Choose a username" required>
+            </div>
+            
+            <label>Email Address</label>
+            <div class="input-group email">
+                <input type="email" id="email" name="email" placeholder="farmer@example.com" required>
+                <div class="error-text" id="emailError">Please enter a valid email address.</div>
+            </div>
+
+            <label>State</label>
+            <div class="input-group">
+                <input type="text" name="state" placeholder="e.g. Maharashtra" required>
+            </div>
+
+            <label>City / District</label>
+            <div class="input-group">
+                <input type="text" name="city" placeholder="e.g. Pune" required>
+            </div>
+
+            <!-- Password input -->
+             <label>Password</label>
+            <div class="input-group lock">
+                <input type="password" name="password1" id="password1" placeholder="Create password" required>
+            </div>
+
+            <!-- Password rules OUTSIDE input-group -->
+            <ul class="rule-list" id="passwordRules">
+                <li id="rule-length">At least 8 characters</li>
+                <li id="rule-upper">One uppercase letter</li>
+                <li id="rule-lower">One lowercase letter</li>
+                <li id="rule-number">One number</li>
+                <li id="rule-special">One special character</li>
+            </ul>
+
+            <label>Confirm Password</label>
+            <div class="input-group lock">
+                <input type="password" name="password2" id="password2" placeholder="Confirm password" required>
+                <div class="error-text" id="matchError">Passwords do not match.</div>
+                <div class="success-text" id="matchSuccess">Passwords match ✓</div>
+            </div>
+
+
+            <button type="submit">Create Free Account</button>
+        </form>
+    
+
+        <div class="footer-text">
+            Already a member?
+            <a href="/login/">Login here</a>
+            <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.6;">
+                🌱 Empowering Agriculture through Technology
+            </div>
+        </div>
     </div>
-    {% endif %}
 
-    <form method="post">
-        {% csrf_token %}
+    <script>
+        const emailInput = document.getElementById("email");
+        const emailError = document.getElementById("emailError");
 
-        <label>Username</label>
-        <div class="input-group user">
-            <input type="text" name="username" placeholder="Choose a username" required>
-        </div>
+        const passwordInput = document.getElementById("password1");
+        const confirmInput = document.getElementById("password2");
 
-        <label>Email Address</label>
-        <div class="input-group email">
-            <input type="email" name="email" placeholder="farmer@example.com" required>
-        </div>
+        const rules = {
+            length: document.getElementById("rule-length"),
+            upper: document.getElementById("rule-upper"),
+            lower: document.getElementById("rule-lower"),
+            number: document.getElementById("rule-number"),
+            special: document.getElementById("rule-special"),
+        };
 
-        <label>Password</label>
-        <div class="input-group lock">
-            <input type="password" name="password1" placeholder="Create password" required>
-        </div>
+        const matchError = document.getElementById("matchError");
+        const matchSuccess = document.getElementById("matchSuccess");
 
-        <label>Confirm Password</label>
-        <div class="input-group lock">
-            <input type="password" name="password2" placeholder="Repeat password" required>
-        </div>
+        /* EMAIL VALIDATION */
+        emailInput.addEventListener("input", () => {
+            const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            emailError.style.display = pattern.test(emailInput.value) ? "none" : "block";
+        });
 
-        <button type="submit">Create Free Account</button>
-    </form>
+        /* PASSWORD STRENGTH CHECK */
+        passwordInput.addEventListener("input", () => {
+            const value = passwordInput.value;
 
-    <div class="footer-text">
-        Already a member? 
-        <a href="/login/">Login here</a>
-        <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.6;">
-            🌱 Empowering Agriculture through Technology
-        </div>
-    </div>
-</div>
+            toggleRule(rules.length, value.length >= 8);
+            toggleRule(rules.upper, /[A-Z]/.test(value));
+            toggleRule(rules.lower, /[a-z]/.test(value));
+            toggleRule(rules.number, /[0-9]/.test(value));
+            toggleRule(rules.special, /[^A-Za-z0-9]/.test(value));
+        });
+
+        /* PASSWORD MATCH CHECK */
+        confirmInput.addEventListener("input", () => {
+            if (!confirmInput.value) {
+                matchError.style.display = "none";
+                matchSuccess.style.display = "none";
+                return;
+            }
+
+            if (confirmInput.value === passwordInput.value) {
+                matchSuccess.style.display = "block";
+                matchError.style.display = "none";
+            } else {
+                matchError.style.display = "block";
+                matchSuccess.style.display = "none";
+            }
+        });
+
+        function toggleRule(element, condition) {
+            element.classList.toggle("valid", condition);
+        }
+
+        /* FINAL SUBMIT CHECK */
+        document.querySelector("form").addEventListener("submit", function (e) {
+            const invalidRules = document.querySelectorAll(".rule-list li:not(.valid)");
+            if (invalidRules.length > 0 || matchError.style.display === "block") {
+                e.preventDefault();
+                alert("Please fix validation errors before submitting.");
+            }
+        });
+    </script>
+
 
 </body>
-</html>
 
+</html>

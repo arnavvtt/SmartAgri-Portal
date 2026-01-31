@@ -5,22 +5,67 @@ from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
 from .forms import CropForm
-from .models import Crop
+from .models import Crop, UserProfile
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from difflib import get_close_matches
-from .utils import apply_location_adjustment
-
 
 # NEW IMPORTS - Step 2-4
 from .crop_weather_rules import get_crop_rules, get_season_rules, CROP_KNOWLEDGE_BASE
 from .city_state_map import get_state_from_city
 from .weather_forecast import get_7day_forecast, analyze_forecast_unpredictability, get_forecast_summary_en, get_forecast_summary_hi
 from .state_risks import get_state_risk_advisories, get_risk_summary_en, get_risk_summary_hi
-# views.py ke TOP pe
-from .utils import generate_daily_farm_insights
-from .utils import generate_farm_summary
+from .utils import generate_daily_farm_insights, generate_farm_summary
+
+# Add this RIGHT AFTER THE IMPORTS at the top of views.py
+
+def get_user_location(request):
+    """
+    Returns (city, state) for the logged-in user
+    Falls back safely if profile is missing
+    """
+    if not request.user.is_authenticated:
+        return "Delhi", "Delhi"
+    
+    try:
+        # Try to get user profile
+        profile = request.user.userprofile
+        city = profile.city if profile.city else "Delhi"
+        state = profile.state if profile.state else "Delhi"
+        return city, state
+    except AttributeError:
+        # userprofile doesn't exist on the user object
+        return "Delhi", "Delhi"
+    except Exception as e:
+        print(f"Error getting user location: {e}")
+        return "Delhi", "Delhi"
+
+@login_required
+def debug_view(request):
+    user_crops = Crop.objects.filter(user=request.user)
+    return JsonResponse({
+        'username': request.user.username,
+        'crop_count': user_crops.count(),
+        'crops': list(user_crops.values('name', 'area'))
+    })
+
+
+VALID_STATES = [
+    "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh",
+    "Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka",
+    "Kerala","Madhya Pradesh","Maharashtra","Odisha","Punjab","Rajasthan",
+    "Tamil Nadu","Telangana","Uttar Pradesh","Uttarakhand","West Bengal"
+]
+
+def normalize_input(value, reference_list=None):
+    if not value:
+        return None
+    value = value.strip().title()
+    if reference_list:
+        match = get_close_matches(value, reference_list, n=1, cutoff=0.6)
+        return match[0] if match else value
+    return value
 
 
 # ========================================
@@ -56,7 +101,12 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    current_city = request.session.get('user_city', 'Delhi')
+    current_city, current_state = get_user_location(request)
+    
+    # Store in session for other views
+    request.session['user_city'] = current_city
+    request.session['user_state'] = current_state
+    
     weather_data = get_weather_data(current_city)
     user_crops = Crop.objects.filter(user=request.user).order_by('-created_at')
     
@@ -75,8 +125,11 @@ def dashboard(request):
         'weather': weather_data,
         'crop_insights': crop_insights,
         'farm_summary': farm_summary,
+        'user_city': current_city,  # ADD THIS
+        'user_state': current_state,  # ADD THIS
     }
     return render(request, "dashboard.html", context)
+
 
 # ========================================
 # ENHANCED WEATHER VIEW (STEP 2-4)
@@ -84,19 +137,16 @@ def dashboard(request):
 
 @login_required
 def weather_view(request):
-    city = request.GET.get('city')
-    
-    if city:
-        request.session['user_city'] = city
-    else:
-        city = request.session.get('user_city', 'Delhi')
+    profile_city, profile_state = get_user_location(request)
+
+    city = request.GET.get('city') or profile_city
+    state = request.GET.get('state') or profile_state
+
     
     # Get current weather
     weather_data = get_weather_data(city)
     user_crops = Crop.objects.filter(user=request.user)
     
-    # Get state from city
-    state = get_state_from_city(city)
     
     # Get 7-day forecast and analysis
     forecast_data = None
@@ -257,10 +307,17 @@ def smart_match(user_input, reference_list):
     matches = get_close_matches(user_input, reference_list, n=1, cutoff=0.3)
     return matches[0] if matches else user_input
 
+
 @login_required
 def mandi_view(request):
-    state_input = request.GET.get("state", ""); comm_input = request.GET.get("commodity", ""); dist_input = request.GET.get("district", "")
-    final_state = smart_match(state_input, VALID_STATES); final_comm = smart_match(comm_input, VALID_COMMODITIES); final_dist = dist_input.strip().title() if dist_input else None
+    profile_city, profile_state = get_user_location(request)
+    state_input = request.GET.get("state") or profile_state or "Delhi"
+    comm_input = request.GET.get("commodity", "")
+    dist_input = request.GET.get("district") or profile_city or "Delhi"
+    
+    final_state = smart_match(state_input, VALID_STATES)
+    final_comm = smart_match(comm_input, VALID_COMMODITIES)
+    final_dist = dist_input.strip().title() if dist_input else None
     params = {"api-key": settings.MANDI_API_KEY, "format": "json", "limit": 50}
     if final_state: params["filters[state.keyword]"] = final_state
     if final_comm: params["filters[commodity]"] = final_comm
@@ -277,15 +334,53 @@ def mandi_view(request):
             params = {"api-key": settings.MANDI_API_KEY, "format": "json", "limit": 20, "filters[state.keyword]": final_state}; res_state = requests.get(url, params=params); mandi_data = res_state.json().get("records", [])
             msg = f"'{final_comm}' ka rate abhi update nahi hua hai. Aapke state ki dusri fasalon ka rate dekhein."
     except Exception as e: msg = "Network me kuch problem hai, kripya thodi der baad koshish karein."
-    return render(request, "mandi.html", {"mandi_data": mandi_data, "message": msg, "searched": {"state": final_state, "commodity": final_comm, "district": final_dist}, "valid_states": VALID_STATES, "valid_commodities": VALID_COMMODITIES})
+    return render(request, "mandi.html", {
+        "mandi_data": mandi_data,
+        "message": msg,
+        "searched": {
+            "state": state_input or profile_state,
+            "commodity": final_comm,
+            "district": dist_input or profile_city,
+        },
+        "valid_states": VALID_STATES,
+        "valid_commodities": VALID_COMMODITIES,
+    })
 
 def register_view(request):
     if request.method == "POST":
-        username = request.POST.get("username"); email = request.POST.get("email"); p1 = request.POST.get("password1"); p2 = request.POST.get("password2")
-        if p1 != p2: messages.error(request, "Passwords do not match"); return render(request, "register.html")
-        if User.objects.filter(username=username).exists(): messages.error(request, "Username exists"); return render(request, "register.html")
-        User.objects.create_user(username=username, email=email, password=p1)
-        messages.success(request, "Account created successfully."); return redirect("/login/")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        state = request.POST.get("state")
+        city = request.POST.get("city")
+        p1 = request.POST.get("password1")
+        p2 = request.POST.get("password2")
+
+        if p1 != p2:
+            messages.error(request, "Passwords do not match")
+            return render(request, "register.html")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username exists")
+            return render(request, "register.html")
+
+        # Create user - signal will create UserProfile
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=p1
+        )
+
+        # Refresh user instance to get the profile created by signal
+        user.refresh_from_db()
+        
+        # Update profile with registration data
+        user.userprofile.state = state
+        user.userprofile.city = city
+        user.userprofile.save()
+
+        messages.success(request, "Account created successfully.")
+        return redirect("/login/")
+
     return render(request, "register.html")
 
 # ========================================
@@ -297,25 +392,27 @@ def get_crop_weather_insights(crop_name, weather_data, forecast_analysis=None):
     Generate bilingual weather advisories for a specific crop
     Enhanced with 7-day forecast analysis
     """
-    temp = weather_data['temp']
-    humidity = weather_data['humidity']
-    description = weather_data['description'].lower()
+    
+    # CORRECT CODE STARTS HERE:
+    temp = weather_data.get('temp', 25)  # Use .get() for safety
+    humidity = weather_data.get('humidity', 65)
+    description = weather_data.get('description', 'clear sky').lower()
     
     insights = []
     crop_rules = get_crop_rules(crop_name)
     
     if crop_rules:
-        crop_name_hi = crop_rules['crop_name_hi']
-        ideal_min = crop_rules['ideal_temp_min']
-        ideal_max = crop_rules['ideal_temp_max']
-        heat_threshold = crop_rules['heat_stress_threshold']
-        water_need = crop_rules['water_requirement']
+        crop_name_hi = crop_rules.get('crop_name_hi', crop_name)
+        ideal_min = crop_rules.get('ideal_temp_min', 20)
+        ideal_max = crop_rules.get('ideal_temp_max', 30)
+        heat_threshold = crop_rules.get('heat_stress_threshold', 35)
+        water_need = crop_rules.get('water_requirement', 'MEDIUM')
         
         # === TEMPERATURE ANALYSIS (ENHANCED) ===
         
         # Check for extended heat stress from forecast
         extended_heat = False
-        if forecast_analysis and forecast_analysis.get('max_consecutive_hot') >= 3:
+        if forecast_analysis and forecast_analysis.get('max_consecutive_hot', 0) >= 3:
             extended_heat = True
             insights.append({
                 'advisory_key': 'EXTENDED_HEAT_STRESS',
@@ -485,207 +582,254 @@ def get_crop_weather_insights(crop_name, weather_data, forecast_analysis=None):
     
     return insights
 
+
 @login_required
 def farm_planner(request):
     """
     Farm Resource Planner with Weather Integration
     """
-    user_crops = Crop.objects.filter(user=request.user)
-    
-    # Get current city and weather
-    city = request.session.get('user_city', 'Delhi')
-    weather_data = get_weather_data(city)
-    state = get_state_from_city(city)
-    
-    # Get 7-day forecast
-    forecast_data = None
-    forecast_analysis = None
-    if weather_data.get('lat') and weather_data.get('lon'):
-        daily_forecasts = get_7day_forecast(weather_data['lat'], weather_data['lon'])
-        if daily_forecasts:
-            forecast_data = daily_forecasts
-            forecast_analysis = analyze_forecast_unpredictability(daily_forecasts)
-    
-    # Get state risks
-    state_risks = get_state_risk_advisories(state) if state else []
-    
-    planned_data = []
-    total_area = 0
-    total_water_saved = 0
-    
-    for crop in user_crops:
-        crop_name = crop.name.strip().title()
-        area = float(crop.area)
-        total_area += area
+    try:
+        # Get user crops
+        user_crops = Crop.objects.filter(user=request.user)
         
-        # Get crop rules
-        crop_rules = get_crop_rules(crop_name)
+        # Get current city and weather
+        city, state = get_user_location(request)
         
-        if crop_rules:
-            season = crop_rules['season']
-            water_requirement = crop_rules['water_requirement']
-            
-            if water_requirement == 'HIGH':
-                base_water_factor = 15000
-            elif water_requirement == 'MEDIUM':
-                base_water_factor = 12000
-            else:
-                base_water_factor = 8000
-            
-            base_urea_factor = 45
-            base_seeds_factor = 40
-        else:
-            season = crop.season if hasattr(crop, 'season') else 'General'
-            base_water_factor = 12000
-            base_urea_factor = 45
-            base_seeds_factor = 40
+        # Get weather data with error handling
+        weather_data = {}
+        try:
+            weather_data = get_weather_data(city)
+        except Exception as e:
+            print(f"Weather API error: {e}")
+            # Default weather data if API fails
+            weather_data = {
+                'temp': 25,
+                'humidity': 65,
+                'description': 'clear sky',
+                'city': city
+            }
         
-        # Weather-based adjustments
-        temp = weather_data['temp']
-        humidity = weather_data['humidity']
-        description = weather_data['description'].lower()
+        # Get 7-day forecast
+        forecast_data = None
+        forecast_analysis = None
+        try:
+            if weather_data.get('lat') and weather_data.get('lon'):
+                daily_forecasts = get_7day_forecast(weather_data['lat'], weather_data['lon'])
+                if daily_forecasts:
+                    forecast_data = daily_forecasts
+                    forecast_analysis = analyze_forecast_unpredictability(daily_forecasts)
+        except Exception as e:
+            print(f"Forecast error: {e}")
         
-        water_multiplier = 1.0
-        weather_alerts = []
-        irrigation_advice = "Normal irrigation schedule"
-        irrigation_advice_hi = "सामान्य सिंचाई कार्यक्रम"
-        water_saved = 0
+        # Get state risks
+        state_risks = []
+        try:
+            if state:
+                state_risks = get_state_risk_advisories(state)
+        except Exception as e:
+            print(f"State risks error: {e}")
         
-        # 1. RAIN DETECTION
-        if 'rain' in description or 'drizzle' in description:
-            water_multiplier = 0.0
-            weather_alerts.append({
-                'type': 'info',
-                'icon': '🌧️',
-                'message_en': 'Rain expected - Skip irrigation today',
-                'message_hi': 'बारिश की उम्मीद - आज सिंचाई छोड़ें'
-            })
-            irrigation_advice = "SKIP IRRIGATION - Rain will provide water"
-            irrigation_advice_hi = "सिंचाई छोड़ें - बारिश पानी देगी"
-            water_saved = base_water_factor * area
-            total_water_saved += water_saved
+        planned_data = []
+        total_area = 0
+        total_water_saved = 0
         
-        # 2. FORECAST RAIN CHECK
-        elif forecast_data:
-            upcoming_rain_days = sum(1 for day in forecast_data[:3] if day.get('rain_probability'))
-            if upcoming_rain_days >= 2:
-                water_multiplier = 0.7
-                weather_alerts.append({
-                    'type': 'info',
-                    'icon': '🌦️',
-                    'message_en': f'Rain expected in next {upcoming_rain_days} days - Reduce irrigation',
-                    'message_hi': f'अगले {upcoming_rain_days} दिनों में बारिश की उम्मीद - सिंचाई कम करें'
+        for crop in user_crops:
+            try:
+                crop_name = crop.name.strip().title()
+                area = float(crop.area)
+                total_area += area
+                
+                # Get crop rules
+                crop_rules = get_crop_rules(crop_name)
+                
+                if crop_rules:
+                    season = crop_rules.get('season', 'General')
+                    water_requirement = crop_rules.get('water_requirement', 'MEDIUM')
+                    
+                    if water_requirement == 'HIGH':
+                        base_water_factor = 15000
+                    elif water_requirement == 'MEDIUM':
+                        base_water_factor = 12000
+                    else:
+                        base_water_factor = 8000
+                    
+                    base_urea_factor = 45
+                    base_seeds_factor = 40
+                else:
+                    # Fallback values
+                    season = getattr(crop, 'season', 'General')
+                    base_water_factor = 12000
+                    base_urea_factor = 45
+                    base_seeds_factor = 40
+                
+                # Weather-based adjustments
+                temp = weather_data.get('temp', 25)
+                humidity = weather_data.get('humidity', 65)
+                description = weather_data.get('description', 'clear sky').lower()
+                
+                water_multiplier = 1.0
+                weather_alerts = []
+                irrigation_advice = "Normal irrigation schedule"
+                irrigation_advice_hi = "सामान्य सिंचाई कार्यक्रम"
+                water_saved = 0
+                
+                # 1. RAIN DETECTION (current weather)
+                if 'rain' in description or 'drizzle' in description:
+                    water_multiplier = 0.0
+                    weather_alerts.append({
+                        'type': 'info',
+                        'icon': '🌧️',
+                        'message_en': 'Rain expected - Skip irrigation today',
+                        'message_hi': 'बारिश की उम्मीद - आज सिंचाई छोड़ें'
+                    })
+                    irrigation_advice = "SKIP IRRIGATION - Rain will provide water"
+                    irrigation_advice_hi = "सिंचाई छोड़ें - बारिश पानी देगी"
+                    water_saved = base_water_factor * area
+                    total_water_saved += water_saved
+                
+                # 2. FORECAST RAIN CHECK (only if no current rain)
+                elif forecast_data and water_multiplier > 0:
+                    try:
+                        upcoming_rain_days = sum(1 for day in forecast_data[:3] 
+                                               if day.get('rain_probability', 0) > 50)
+                        if upcoming_rain_days >= 2:
+                            water_multiplier = 0.7
+                            weather_alerts.append({
+                                'type': 'info',
+                                'icon': '🌦️',
+                                'message_en': f'Rain expected in next {upcoming_rain_days} days - Reduce irrigation',
+                                'message_hi': f'अगले {upcoming_rain_days} दिनों में बारिश की उम्मीद - सिंचाई कम करें'
+                            })
+                            irrigation_advice = "Light irrigation only - Rain coming soon"
+                            irrigation_advice_hi = "हल्की सिंचाई - जल्द बारिश आएगी"
+                    except Exception as e:
+                        print(f"Forecast check error: {e}")
+                
+                # 3. HIGH TEMPERATURE (only apply if not already adjusted for rain)
+                if temp > 35 and water_multiplier > 0:
+                    water_multiplier = max(water_multiplier, 1.2)
+                    weather_alerts.append({
+                        'type': 'warning',
+                        'icon': '🔥',
+                        'message_en': f'High temperature ({temp}°C) - Increase watering by 20%',
+                        'message_hi': f'उच्च तापमान ({temp}°C) - पानी 20% बढ़ाएं'
+                    })
+                    if irrigation_advice == "Normal irrigation schedule":
+                        irrigation_advice = "EXTRA watering needed - Water early morning (before 7 AM)"
+                        irrigation_advice_hi = "अतिरिक्त पानी चाहिए - सुबह जल्दी पानी दें (7 बजे से पहले)"
+                
+                # 4. EXTENDED HEAT
+                if forecast_analysis and forecast_analysis.get('max_consecutive_hot', 0) >= 3 and water_multiplier > 0:
+                    water_multiplier = max(water_multiplier, 1.3)
+                    weather_alerts.append({
+                        'type': 'danger',
+                        'icon': '🌡️',
+                        'message_en': f'Extended heat ({forecast_analysis["max_consecutive_hot"]} days) - Plan extra water',
+                        'message_hi': f'लंबी गर्मी ({forecast_analysis["max_consecutive_hot"]} दिन) - अतिरिक्त पानी की योजना बनाएं'
+                    })
+                
+                # 5. HIGH HUMIDITY (only reduce if not already at 0)
+                if humidity > 80 and water_multiplier > 0:
+                    water_multiplier *= 0.9
+                    weather_alerts.append({
+                        'type': 'info',
+                        'icon': '💧',
+                        'message_en': f'High humidity ({humidity}%) - Reduce watering slightly',
+                        'message_hi': f'अधिक नमी ({humidity}%) - पानी थोड़ा कम करें'
+                    })
+                
+                # 6. LOW TEMPERATURE (only reduce if not already at 0)
+                if temp < 15 and water_multiplier > 0:
+                    water_multiplier *= 0.8
+                    weather_alerts.append({
+                        'type': 'info',
+                        'icon': '❄️',
+                        'message_en': f'Cool weather ({temp}°C) - Less water needed',
+                        'message_hi': f'ठंडा मौसम ({temp}°C) - कम पानी चाहिए'
+                    })
+                
+                # STATE RISK ALERTS
+                state_alert = None
+                for risk in state_risks:
+                    if risk.get('advisory_key') in ['HEATWAVE_RISK', 'HEAVY_RAINFALL', 'FLOOD_RISK', 'COLD_WAVE', 'FROST_RISK']:
+                        state_alert = {
+                            'icon': risk.get('icon', '⚠️'),
+                            'name_en': risk.get('name_en', 'State Alert'),
+                            'name_hi': risk.get('name_hi', 'राज्य चेतावनी'),
+                            'farm_impact_en': risk.get('farm_impact_en', 'Potential impact on farming activities')
+                        }
+                        break
+                
+                # FINAL CALCULATIONS
+                water_needed = area * base_water_factor * water_multiplier
+                urea_needed = area * base_urea_factor
+                seeds_needed = area * base_seeds_factor
+                
+                # Calculate percentage change
+                if water_multiplier == 0:
+                    water_change_percent = 0
+                else:
+                    water_change_percent = abs((water_multiplier - 1) * 100)
+                
+                # Efficiency score
+                if water_multiplier == 0:
+                    efficiency_score = 98
+                elif water_multiplier < 1:
+                    efficiency_score = 95
+                elif water_multiplier > 1.2:
+                    efficiency_score = 75
+                else:
+                    efficiency_score = 88
+                
+                # Add to planned data
+                planned_data.append({
+                    'obj': crop,
+                    'water': f"{int(water_needed):,}",
+                    'water_raw': int(water_needed),
+                    'urea': f"{urea_needed:.1f}",
+                    'seeds': f"{seeds_needed:.1f}",
+                    'season': season,
+                    'efficiency_score': efficiency_score,
+                    'weather_alerts': weather_alerts,
+                    'irrigation_advice': irrigation_advice,
+                    'irrigation_advice_hi': irrigation_advice_hi,
+                    'water_multiplier': water_multiplier,
+                    'water_change_percent': int(water_change_percent),
+                    'water_saved': int(water_saved) if water_saved > 0 else 0,
+                    'state_alert': state_alert
                 })
-                irrigation_advice = "Light irrigation only - Rain coming soon"
-                irrigation_advice_hi = "हल्की सिंचाई - जल्द बारिश आएगी"
+                
+            except Exception as e:
+                print(f"Error processing crop {crop.id}: {e}")
+                continue
         
-        # 3. HIGH TEMPERATURE
-        if temp > 35:
-            if water_multiplier > 0:
-                water_multiplier = max(water_multiplier, 1.2)
-                weather_alerts.append({
-                    'type': 'warning',
-                    'icon': '🔥',
-                    'message_en': f'High temperature ({temp}°C) - Increase watering by 20%',
-                    'message_hi': f'उच्च तापमान ({temp}°C) - पानी 20% बढ़ाएं'
-                })
-                if irrigation_advice == "Normal irrigation schedule":
-                    irrigation_advice = "EXTRA watering needed - Water early morning (before 7 AM)"
-                    irrigation_advice_hi = "अतिरिक्त पानी चाहिए - सुबह जल्दी पानी दें (7 बजे से पहले)"
+        context = {
+            'planned_data': planned_data,
+            'total_area': total_area,
+            'crop_count': user_crops.count(),
+            'city': city,
+            'state': state if state else 'Unknown',
+            'weather': weather_data,
+            'total_water_saved': int(total_water_saved),
+            'forecast_analysis': forecast_analysis,
+        }
         
-        # 4. EXTENDED HEAT
-        if forecast_analysis and forecast_analysis.get('max_consecutive_hot') >= 3:
-            if water_multiplier > 0:
-                water_multiplier = max(water_multiplier, 1.3)
-                weather_alerts.append({
-                    'type': 'danger',
-                    'icon': '🌡️',
-                    'message_en': f'Extended heat ({forecast_analysis["max_consecutive_hot"]} days) - Plan extra water',
-                    'message_hi': f'लंबी गर्मी ({forecast_analysis["max_consecutive_hot"]} दिन) - अतिरिक्त पानी की योजना बनाएं'
-                })
+        return render(request, 'farm_planner.html', context)
         
-        # 5. HIGH HUMIDITY
-        if humidity > 80 and water_multiplier > 0:
-            water_multiplier *= 0.9
-            weather_alerts.append({
-                'type': 'info',
-                'icon': '💧',
-                'message_en': f'High humidity ({humidity}%) - Reduce watering slightly',
-                'message_hi': f'अधिक नमी ({humidity}%) - पानी थोड़ा कम करें'
-            })
-        
-        # 6. LOW TEMPERATURE
-        if temp < 15 and water_multiplier > 0:
-            water_multiplier *= 0.8
-            weather_alerts.append({
-                'type': 'info',
-                'icon': '❄️',
-                'message_en': f'Cool weather ({temp}°C) - Less water needed',
-                'message_hi': f'ठंडा मौसम ({temp}°C) - कम पानी चाहिए'
-            })
-        
-        # STATE RISK ALERTS
-        state_alert = None
-        for risk in state_risks:
-            if risk['advisory_key'] in ['HEATWAVE_RISK', 'HEAVY_RAINFALL', 'FLOOD_RISK', 'COLD_WAVE', 'FROST_RISK']:
-                state_alert = {
-                    'icon': risk['icon'],
-                    'name_en': risk['name_en'],
-                    'name_hi': risk['name_hi'],
-                    'farm_impact_en': risk['farm_impact_en']
-                }
-                break
-        
-        # FINAL CALCULATIONS
-        water_needed = area * base_water_factor * water_multiplier
-        urea_needed = area * base_urea_factor
-        seeds_needed = area * base_seeds_factor
-        
-        # Calculate percentage change
-        if water_multiplier == 0:
-            water_change_percent = 0
-        else:
-            water_change_percent = abs((water_multiplier - 1) * 100)
-        
-        # Efficiency score
-        if water_multiplier == 0:
-            efficiency_score = 98
-        elif water_multiplier < 1:
-            efficiency_score = 95
-        elif water_multiplier > 1.2:
-            efficiency_score = 75
-        else:
-            efficiency_score = 88
-        
-        # Add to planned data
-        planned_data.append({
-            'obj': crop,
-            'water': f"{int(water_needed):,}",
-            'water_raw': int(water_needed),
-            'urea': f"{urea_needed:.1f}",
-            'seeds': f"{seeds_needed:.1f}",
-            'season': season,
-            'efficiency_score': efficiency_score,
-            'weather_alerts': weather_alerts,
-            'irrigation_advice': irrigation_advice,
-            'irrigation_advice_hi': irrigation_advice_hi,
-            'water_multiplier': water_multiplier,
-            'water_change_percent': int(water_change_percent),
-            'water_saved': int(water_saved) if water_saved > 0 else 0,
-            'state_alert': state_alert
+    except Exception as e:
+        print(f"Farm planner error: {e}")
+        # Return minimal context on error
+        return render(request, 'farm_planner.html', {
+            'planned_data': [],
+            'total_area': 0,
+            'crop_count': 0,
+            'city': 'Delhi',
+            'state': 'Delhi',
+            'weather': {'temp': 25, 'humidity': 65, 'description': 'clear sky'},
+            'total_water_saved': 0,
+            'forecast_analysis': None,
+            'error_message': 'Unable to load farm planner data. Please try again.'
         })
-    
-    context = {
-        'planned_data': planned_data,
-        'total_area': total_area,
-        'crop_count': user_crops.count(),
-        'city': city,
-        'state': state if state else 'Unknown',
-        'weather': weather_data,
-        'total_water_saved': int(total_water_saved),
-        'forecast_analysis': forecast_analysis,
-    }
-    return render(request, 'farm_planner.html', context)
 
 @login_required
 def crop_insight_api(request, crop_name):
@@ -694,5 +838,4 @@ def crop_insight_api(request, crop_name):
     weather_data = get_weather_data(city)
     insights = get_crop_weather_insights(crop_name, weather_data)
     return JsonResponse({'crop': crop_name, 'insights': insights})
-
 
