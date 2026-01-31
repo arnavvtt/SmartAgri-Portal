@@ -195,7 +195,7 @@ def get_weather_data(city="Delhi"):
 
 # ========================================
 # OTHER VIEWS (UNCHANGED)
-# ========================================
+# =======================================
 
 @login_required
 def weather_api(request):
