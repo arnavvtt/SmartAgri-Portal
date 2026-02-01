@@ -269,7 +269,7 @@ def add_crop(request):
             crop = form.save(commit=False)
             crop.user = request.user
             crop.save()
-            return redirect('/farm_planner/')
+            return redirect('my_crops')
     else:
         form = CropForm()
     return render(request, 'agriapp/add_crop.html', {'form': form})
