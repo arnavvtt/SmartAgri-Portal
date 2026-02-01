@@ -261,6 +261,7 @@ def weather_api(request):
         "humidity": data["main"]["humidity"], "description": data["weather"][0]["description"],
     })
 
+
 @login_required
 def add_crop(request):
     if request.method == 'POST':
@@ -269,9 +270,15 @@ def add_crop(request):
             crop = form.save(commit=False)
             crop.user = request.user
             crop.save()
+            
+            # SUCCESS MESSAGE ADD KARO
+            messages.success(request, f'✅ Crop "{crop.name}" added successfully!')
+            
+            # REDIRECT TO my_crops (LIST PAGE)
             return redirect('my_crops')
-    else:
-        form = CropForm()
+    
+    # Normal form display
+    form = CropForm()
     return render(request, 'agriapp/add_crop.html', {'form': form})
 
 @login_required
@@ -282,16 +289,28 @@ def my_crops(request):
 @login_required
 def delete_crop(request, crop_id):
     crop = get_object_or_404(Crop, id=crop_id, user=request.user)
+    crop_name = crop.name  # Store name before deleting
     crop.delete()
+    
+    # ADD SUCCESS MESSAGE
+    messages.success(request, f'Crop "{crop_name}" deleted successfully!')
+    
     return redirect('my_crops')
 
 @login_required
 def edit_crop(request, crop_id):
     crop = get_object_or_404(Crop, id=crop_id, user=request.user)
     if request.method == "POST":
-        crop.name = request.POST.get("name"); crop.season = request.POST.get("season")
-        crop.area = request.POST.get("area"); crop.save()
+        crop.name = request.POST.get("name")
+        crop.season = request.POST.get("season")
+        crop.area = request.POST.get("area")
+        crop.save()
+        
+        # ADD SUCCESS MESSAGE
+        messages.success(request, f'Crop "{crop.name}" updated successfully!')
+        
         return redirect('my_crops')
+    
     return render(request, "edit_crop.html", {"crop": crop})
 
 # ========================================
