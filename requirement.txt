@@ -1,0 +1,28 @@
+# Core Framework
+Django==4.2.7
+
+# Database (default SQLite used, no extra driver needed)
+# Uncomment below if switching to PostgreSQL
+# psycopg2-binary==2.9.9
+
+# API Requests (Weather, Mandi data)
+requests==2.31.0
+
+# Environment Variable Management (recommended for API keys)
+python-dotenv==1.0.0
+
+# Date & Time Utilities
+pytz==2023.3
+
+# JSON handling & data formatting
+simplejson==3.19.2
+
+# Security & Authentication helpers
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# Static files handling (for production)
+whitenoise==6.6.0
+
+# Deployment server
+gunicorn==21.2.0
