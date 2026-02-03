@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- ORGANIC & TRUST COLOR SYSTEM (Keeping your original colors) --- */
+    :root {
+        --primary-deep: #1B5E20;
+        --primary-main: #2E7D32;
+        --primary-light: #E8F5E9;
+        --accent-earth: #795548;
+        --accent-sun: #FBC02D;
+        --bg-light: #F9FBF9;
+        --text-main: #212121;
+        --text-muted: #616161;
+        --status-success: #2E7D32;
+        --status-warning: #FFA000;
+        --status-danger: #D32F2F;
+        --status-info: #0277BD;
+    }
+
+    /* --- BASE RESET & LAYOUT --- */
+    body {
+        background-color: var(--bg-light);
+        color: var(--text-main);
+        font-family: 'Inter', -apple-system, sans-serif;
+        line-height: 1.6;
+    }
+
+    /* --- WEATHER SUMMARY (Modified for Dynamic City Name) --- */
+
+    /* --- UPDATE CITY CTA --- */
+    .btn-update-city {
+        background: linear-gradient(135deg, #43a047, #2e7d32);
+        color: #ffffff;
+        padding: 8px 18px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 6px 16px rgba(46, 125, 50, 0.35);
+        transition: all 0.25s ease;
+        border: none;
+    }
+
+    .btn-update-city:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(46, 125, 50, 0.45);
+        filter: brightness(1.05);
+        color: #ffffff;
+    }
+
+    .weather-summary-compact {
+        background: linear-gradient(135deg, #E3F2FD 0%, #F1F8E9 100%);
+        border: 1px solid #C8E6C9;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        margin-bottom: 35px;
+        position: relative;
+    }
+
+
+    .city-indicator {
+        background: var(--primary-deep);
+        color: white;
+        padding: 2px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .weather-mini-stat {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+        border: 1px solid #E0F2F1;
+        transition: all 0.25s ease;
+    }
+
+    .weather-mini-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+
+    .weather-mini-stat h4 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-deep);
+        margin: 5px 0;
+    }
+
+    .weather-mini-stat small {
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        display: block;
+    }
+
+    .small-hin {
+        font-size: 0.7rem;
+        color: var(--primary-main);
+        display: block;
+        text-transform: none;
+    }
+
+    .farm-alert-compact {
+        background: white;
+        border-left: 4px solid var(--accent-sun);
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        /* Made slightly bolder */
+        color: var(--text-main);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    }
+
+    /* --- DASHBOARD FEATURE CARDS (Same as your original) --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 14px;
+        padding: 25px;
+        border: 1px solid #E0E0E0;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 6px;
+        height: 100%;
+        background: var(--primary-main);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary-main);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-icon {
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .feature-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-deep);
+        margin-bottom: 8px;
+    }
+
+    .feature-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    .feature-btn {
+        background: var(--primary-main);
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .feature-btn:hover {
+        background: var(--primary-deep);
+        color: #ffffff;
+    }
+
+    /* --- CROP INSIGHTS (Bilingual Updates) --- */
+    .crop-insight-compact {
+        background: white;
+        border-radius: 16px;
+        padding: 22px;
+        border: 1px solid #EAEAEA;
+        border-left: 6px solid var(--primary-main);
+        height: 100%;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+        transition: all 0.25s ease;
+    }
+
+    .crop-insight-compact:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    }
+
+
+    .crop-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--primary-deep);
+    }
+
+    .insight-compact {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        border-left: 3px solid var(--primary-main);
+    }
+
+    .eng-msg {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .hin-msg {
+        font-weight: 500;
+        display: block;
+        font-size: 0.85rem;
+        color: #444;
+    }
+
+    .insight-compact {
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        border-left: 4px solid var(--primary-main);
+    }
+
+    .insight-compact strong {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+
+    .insight-compact.warning {
+        border-left-color: var(--status-warning);
+        background: #FFFDE7;
+    }
+
+    .insight-compact.danger {
+        border-left-color: var(--status-danger);
+        background: #FFEBEE;
+    }
+
+    .insight-compact.success {
+        border-left-color: var(--status-success);
+        background: #F1F8E9;
+    }
+
+    .insight-compact.info {
+        border-left-color: var(--status-info);
+        background: #E1F5FE;
+    }
+
+    .section-header {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--accent-earth);
+        margin: 35px 0 20px 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-header::before {
+        content: '';
+        width: 5px;
+        height: 25px;
+        background: var(--accent-earth);
+        margin-right: 12px;
+        border-radius: 2px;
+    }
+
+    .btn-refresh-compact {
+        width: 100%;
+        margin-top: 12px;
+        padding: 10px 0;
+        border-radius: 10px;
+        background: #E8F5E9;
+        color: var(--primary-deep);
+        border: 1px dashed var(--primary-main);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-refresh-compact:hover {
+        background: var(--primary-main);
+        color: #ffffff;
+    }
+
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+
+    <div class="weather-summary-compact">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0" style="color: var(--primary-deep); font-weight: 800;">
+                🌤️ Farm Weather Summary <span class="city-indicator">{{ user_city|default:weather.city }}</span>
+            </h5>
+            <a href="{% url 'weather' %}" class="btn-update-city">
+                🌍 Update City / शहर बदलें
+            </a>
+
+        </div>
+
+        {% for alert in farm_summary %}
+        <div class="farm-alert-compact">
+            <i class="fas fa-info-circle me-2"></i> {{ alert }}
+        </div>
+        {% endfor %}
+
+        <div class="row mt-3">
+            <div class="col-4">
+                <div class="weather-mini-stat">
+                    <div class="icon">🌡️</div>
+                    <h4>{{ weather.temp }}°C</h4>
+                    <small>Temperature</small>
+                    <small class="small-hin">तापमान</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="weather-mini-stat">
+                    <div class="icon">💧</div>
+                    <h4>{{ weather.humidity }}%</h4>
+                    <small>Humidity</small>
+                    <small class="small-hin">नमी</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="weather-mini-stat">
+                    <div class="icon">🍃</div>
+                    <h4 style="font-size: 1.1rem;">{{ weather.description|title }}</h4>
+                    <small>Condition</small>
+                    <small class="small-hin">मौसम</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="section-header">Farm Management / कृषि प्रबंधन</h4>
+    <div class="dashboard-grid">
+        <div class="feature-card">
+            <span class="feature-icon">🌱</span>
+            <h5 class="feature-title">Add New Crop</h5>
+            <p class="feature-description">Log planting dates to receive alerts. / नई फसल जोड़ें।</p>
+            <a href="{% url 'add_crop' %}" class="feature-btn">Add Crop</a>
+        </div>
+
+        <div class="feature-card">
+            <span class="feature-icon">📋</span>
+            <h5 class="feature-title">My Crops</h5>
+            <p class="feature-description">Manage active crops. / मेरी फसलें देखें।</p>
+            <a href="{% url 'my_crops' %}" class="feature-btn">View List</a>
+        </div>
+
+        <div class="feature-card">
+            <span class="feature-icon">💰</span>
+            <h5 class="feature-title">Mandi Prices</h5>
+            <p class="feature-description">Track real-time market rates. / मंडी भाव देखें।</p>
+            <a href="{% url 'mandi' %}" class="feature-btn">Check Prices</a>
+        </div>
+    </div>
+
+    {% if crop_insights %}
+    <h4 class="section-header">Field Weather Insights / फसल सलाह</h4>
+    <div class="row">
+        {% for item in crop_insights %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="crop-insight-compact">
+                <div class="crop-header-compact">
+                    <div>
+                        <div class="crop-name">{{ item.crop.name|title }}</div>
+                        <small class="text-muted fw-bold">{{ item.crop.area }} acres • {{ item.crop.season }}</small>
+                    </div>
+                </div>
+
+                {% for insight in item.insights %}
+                <div class="insight-compact {{ insight.alert_type }}">
+
+                    <strong>{{ insight.icon }} {{ insight.message_en }}</strong><br>
+
+                    <small style="color: var(--text-muted);">💡 {{ insight.suggested_action_en }}</small>
+                </div>
+                {% endfor %}
+
+                <button class="btn-refresh-compact refresh-insight mt-2" data-crop="{{ item.crop.name }}">
+                    🔄 Refresh Analysis / ताज़ा करें
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-compact">
+        <div class="feature-icon" style="opacity: 0.3;">🌾</div>
+        <h5>No crops registered / कोई फसल नहीं है</h5>
+        <p class="text-muted">Register a crop to get advice. / सलाह पाने के लिए फसल जोड़ें।</p>
+        <a href="{% url 'add_crop' %}" class="btn btn-success rounded-pill px-4">Add Crop Now</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="{% static 'js/weather-insights.js' %}"></script>
+{% endblock %}

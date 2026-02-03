@@ -1,0 +1,469 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block content %}
+
+<style>
+    /* --- PAGE-SPECIFIC ORGANIC SYSTEM --- */
+
+    :root {
+
+        --hero-bg: #F1F8E9;
+        /* Very light mint for the hero section */
+
+    }
+
+
+
+    .home-container {
+
+        background-color: var(--bg-light);
+
+        min-height: 90vh;
+
+    }
+
+
+
+    /* --- HERO SECTION --- */
+
+    .hero {
+
+        position: relative;
+
+        padding: 80px 10%;
+
+        background: linear-gradient(rgba(27, 94, 32, 0.03), rgba(27, 94, 32, 0.03)),
+
+            url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+
+        background-size: cover;
+
+        background-position: center;
+
+        display: flex;
+
+        align-items: center;
+
+        border-bottom: 8px solid var(--primary-light);
+
+    }
+
+
+
+    .hero-content {
+
+        background: rgba(255, 255, 255, 0.95);
+
+        padding: 50px;
+
+        border-radius: 20px;
+
+        max-width: 650px;
+
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+
+        backdrop-filter: blur(5px);
+
+        border-left: 8px solid var(--primary-main);
+
+    }
+
+
+
+    .hero h1 {
+
+        font-size: 3rem;
+
+        font-weight: 800;
+
+        color: var(--primary-deep);
+
+        line-height: 1.2;
+
+        margin-bottom: 20px;
+
+    }
+
+
+
+    .hero p {
+
+        font-size: 1.15rem;
+
+        color: var(--text-muted);
+
+        margin-bottom: 35px;
+
+        line-height: 1.8;
+
+    }
+
+
+
+    /* --- BUTTONS --- */
+
+    .hero-buttons {
+
+        display: flex;
+
+        gap: 20px;
+
+    }
+
+
+
+    .btn-primary-organic {
+
+        background-color: var(--primary-main);
+
+        color: white;
+
+        padding: 15px 40px;
+
+        border-radius: 10px;
+
+        font-weight: 700;
+
+        text-decoration: none;
+
+        transition: all 0.3s ease;
+
+        border: none;
+
+        font-size: 1.1rem;
+
+    }
+
+
+
+    .btn-primary-organic:hover {
+
+        background-color: var(--primary-deep);
+
+        transform: translateY(-3px);
+
+        box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+
+        color: white;
+
+    }
+
+
+
+    .btn-outline-organic {
+
+        background-color: transparent;
+
+        color: var(--primary-deep);
+
+        padding: 15px 40px;
+
+        border-radius: 10px;
+
+        font-weight: 700;
+
+        text-decoration: none;
+
+        border: 2px solid var(--primary-deep);
+
+        transition: all 0.3s ease;
+
+        font-size: 1.1rem;
+
+    }
+
+
+
+    .btn-outline-organic:hover {
+
+        background-color: var(--primary-light);
+
+        transform: translateY(-3px);
+
+    }
+
+
+
+    /* --- FEATURES GRID (Trust Indicators) --- */
+
+    .trust-bar {
+
+        display: grid;
+
+        grid-template-columns: repeat(3, 1fr);
+
+        gap: 30px;
+
+        margin-top: -50px;
+
+        padding: 0 10%;
+
+        position: relative;
+
+        z-index: 10;
+
+    }
+
+
+
+    .trust-card {
+
+        background: white;
+
+        padding: 30px;
+
+        border-radius: 15px;
+
+        text-align: center;
+
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+
+        border: 1px solid #eee;
+
+    }
+
+
+
+    .trust-card .icon {
+
+        font-size: 2.5rem;
+
+        margin-bottom: 15px;
+
+        display: block;
+
+    }
+
+
+
+    .trust-card h3 {
+
+        font-size: 1.2rem;
+
+        color: var(--primary-deep);
+
+        font-weight: 700;
+
+    }
+
+
+
+    .trust-card p {
+
+        font-size: 0.9rem;
+
+        color: var(--text-muted);
+
+        margin: 0;
+
+    }
+
+    .footer-register-btn {
+        display: inline-block;
+        margin-top: 18px;
+        padding: 10px 28px;
+        background-color: #ffffff;
+        color: var(--primary-deep);
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .footer-register-btn:hover {
+        background-color: var(--primary-light);
+        color: var(--primary-deep);
+        transform: translateY(-2px);
+    }
+
+
+    @media (max-width: 992px) {
+        .footer-container {
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 1.4rem;
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Mobile Devices */
+    @media (max-width: 600px) {
+        .simple-footer {
+            padding: 50px 0 25px 0;
+        }
+
+        .footer-logo {
+            font-size: 1.25rem;
+        }
+
+        .footer-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            padding: 0 10px;
+        }
+
+        .footer-register-btn {
+            padding: 10px 22px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .footer-divider {
+            margin: 25px auto;
+            width: 70%;
+        }
+
+        .footer-copy {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Very Small Screens */
+    @media (max-width: 400px) {
+        .footer-logo {
+            font-size: 1.1rem;
+        }
+
+        .footer-text {
+            font-size: 0.85rem;
+        }
+
+        .footer-register-btn {
+            width: 100%;
+            max-width: 240px;
+        }
+    }
+
+
+
+
+    /* Mobile Responsiveness */
+
+    @media (max-width: 768px) {
+
+        .hero {
+            padding: 40px 5%;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .trust-bar {
+
+            grid-template-columns: 1fr;
+
+            margin-top: 20px;
+
+            padding: 0 5%;
+
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+        }
+
+    }
+</style>
+
+<div class="home-container">
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <h1>Cultivating Trust through Technology</h1>
+
+            <p>
+
+                Empowering farmers with data-driven insights. From local weather alerts to real-time Mandi prices, we
+                provide the tools you need to grow your harvest and your business.
+
+            </p>
+
+
+
+            <div class="hero-buttons">
+
+                <a href="{% url 'login' %}" class="btn-primary-organic">Login to Dashboard</a>
+
+                <a href="{% url 'register' %}" class="btn-outline-organic">Join Community</a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <div class="trust-bar">
+
+        <div class="trust-card">
+
+            <span class="icon">🌦️</span>
+
+            <h3>Weather Intelligence</h3>
+
+            <p>Precise forecasts for your specific farm location.</p>
+
+        </div>
+
+        <div class="trust-card">
+
+            <span class="icon">📈</span>
+
+            <h3>Market Transparency</h3>
+
+            <p>Direct updates from Mandis across the nation.</p>
+
+        </div>
+
+        <div class="trust-card">
+
+            <span class="icon">🛡️</span>
+
+            <h3>Expert Guidance</h3>
+
+            <p>Actionable advice to protect your crops from disease.</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===== SIMPLE FOOTER START ===== -->
+<footer class="simple-footer">
+    <div class="footer-container">
+        <h3 class="footer-logo">🌱 SmartAgri</h3>
+
+        <p class="footer-text">
+            Empowering agriculture through smart learning and technology.
+        </p>
+
+        <!-- Register Button -->
+        <a href="{% url 'register' %}" class="footer-register-btn">
+            Get Started
+        </a>
+
+        <div class="footer-divider"></div>
+
+        <p class="footer-copy">
+            © 2026 SmartAgri • Built for the Modern Farmer
+        </p>
+    </div>
+</footer>
+
+{% endblock %}

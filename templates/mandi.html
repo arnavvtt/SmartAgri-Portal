@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-deep: #1B5E20;
+        --primary-main: #2E7D32;
+        --bg-light: #F9FBF9;
+        --accent-earth: #795548;
+    }
+
+    .mandi-container {
+        background-color: var(--bg-light);
+        min-height: 90vh;
+        padding-top: 40px;
+    }
+
+    /* Header Styling */
+    .page-title {
+        font-size: 2.2rem;
+        /* Bada Font */
+        font-weight: 800;
+        color: var(--primary-deep);
+        margin-bottom: 5px;
+    }
+
+    .title-hindi {
+        font-size: 1.4rem;
+        color: var(--primary-main);
+        font-weight: 700;
+        display: block;
+    }
+
+    /* Search Section */
+    .search-section {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        margin-bottom: 35px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-top: 8px solid var(--primary-main);
+    }
+
+    /* Labels - Ab bade aur clear hain */
+    .form-label {
+        font-weight: 800;
+        color: var(--text-main);
+        font-size: 1.1rem;
+        /* Bada kiya gaya */
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .label-hindi {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--primary-main);
+        font-weight: 600;
+        margin-top: -2px;
+    }
+
+    .hybrid-input {
+        height: 60px;
+        /* Input box ki height badhai */
+        border-radius: 12px !important;
+        border: 2px solid #ddd !important;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    /* Table - Sabse important part */
+    .mandi-table-card {
+        border-radius: 20px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+        background-color: var(--primary-deep);
+        /* Dark background for better contrast */
+        color: white !important;
+    }
+
+    .table-header th {
+        padding: 18px 15px !important;
+        font-size: 1rem;
+        /* Header font bada kiya */
+        font-weight: 700;
+        line-height: 1.3;
+        border: none;
+    }
+
+    .header-hindi {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #C8E6C9;
+        /* Light green tint for Hindi */
+    }
+
+    /* Table Body Data */
+    .table tbody td {
+        padding: 20px 15px;
+        font-size: 1.1rem;
+        /* Data ka size bada kiya */
+        font-weight: 600;
+    }
+
+    .price-bold {
+        font-size: 1.3rem;
+        /* Price sabse bada dikhega */
+        font-weight: 800;
+        color: var(--primary-deep);
+    }
+
+    .btn-check-prices {
+        background-color: var(--primary-main);
+        color: white;
+        border-radius: 50px;
+        padding: 16px 60px;
+        font-weight: 800;
+        font-size: 1.2rem;
+        border: none;
+        box-shadow: 0 6px 20px rgba(46, 125, 50, 0.3);
+    }
+</style>
+
+<div class="mandi-container">
+    <div class="container pb-5">
+
+        <div class="text-center mb-5">
+            <h1 class="page-title">Mandi Price Finder</h1>
+            <span class="title-hindi">मंडी के ताजा भाव</span>
+        </div>
+
+        <div class="search-section">
+            <form method="GET" action="{% url 'mandi' %}" class="row g-4">
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        STATE <span class="label-hindi">राज्य चुनें</span>
+                    </label>
+                    <input type="text" name="state" list="stateOptions" class="form-control hybrid-input"
+                        placeholder="Type State Name..." value="{{ user_state|default:searched.state|default:'' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        DISTRICT <span class="label-hindi">ज़िला चुनें</span>
+                    </label>
+                    <input type="text" name="district" class="form-control hybrid-input"
+                        placeholder="Type District Name..."
+                        value="{{ user_city|default:searched.district|default:'' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        COMMODITY <span class="label-hindi">फसल का नाम</span>
+                    </label>
+                    <input type="text" name="commodity" list="cropOptions" class="form-control hybrid-input"
+                        placeholder="Type Crop Name..." value="{{ searched.commodity|default:'' }}">
+                </div>
+
+                <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn btn-check-prices">
+                        CHECK PRICES / भाव देखें
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card mandi-table-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-header">
+                        <tr>
+                            <th class="ps-4">MARKET <span class="header-hindi">मंडी</span></th>
+                            <th>DISTRICT <span class="header-hindi">ज़िला</span></th>
+                            <th>CROP <span class="header-hindi">फसल</span></th>
+                            <th>MIN PRICE <span class="header-hindi">कम से कम</span></th>
+                            <th>MAX PRICE <span class="header-hindi">ज़्यादा से ज़्यादा</span></th>
+                            <th class="pe-4">AVERAGE <span class="header-hindi">औसत भाव</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in mandi_data %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ item.market }}</td>
+                            <td class="text-muted">{{ item.district }}</td>
+                            <td>
+                                <span class="badge px-3 py-2"
+                                    style="background: var(--primary-light); color: var(--primary-deep); font-size: 1rem;">
+                                    {{ item.commodity }}
+                                </span>
+                            </td>
+                            <td class="fw-bold text-secondary">₹{{ item.min_price }}</td>
+                            <td class="fw-bold text-secondary">₹{{ item.max_price }}</td>
+                            <td class="pe-4 price-bold text-success">₹{{ item.modal_price }}</td>
+                        </tr>
+                        {% empty %}
+                        {% if message %}
+                        <div class="alert alert-info text-center" style="margin-top:20px;">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <h4 class="text-muted fw-bold">No results found / कोई जानकारी नहीं मिली</h4>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

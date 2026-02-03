@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    :root {
+        --primary-deep: #1B5E20;
+        --primary-main: #2E7D32;
+        --primary-light: #E8F5E9;
+        --accent-earth: #795548;
+    }
+
+    .card:hover {
+        transform: translateY(-8px);
+        transition: all 0.3s ease;
+    }
+
+    .weather-banner {
+        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+        border-radius: 15px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 6px 20px rgba(27, 94, 32, 0.3);
+    }
+
+    .alert-badge {
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        margin: 5px;
+    }
+
+    .alert-warning {
+        background: #FFFDE7;
+        color: #F57F17;
+        border: 1px solid #FBC02D;
+    }
+
+    .alert-danger {
+        background: #FFEBEE;
+        color: #C62828;
+        border: 1px solid #D32F2F;
+    }
+
+    .alert-info {
+        background: #E3F2FD;
+        color: #1976D2;
+        border: 1px solid #1976D2;
+    }
+
+    .savings-highlight {
+        background: #E8F5E9;
+        border-left: 5px solid #2E7D32;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="container py-5">
+    <!-- HEADER -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-5 fw-bold" style="color: var(--primary-deep);">🚜 Smart Farm Planner</h1>
+            <p class="lead text-muted">Weather-optimized resource planning for <strong>{{ total_area }} Acres</strong>
+            </p>
+            <div style="width: 100px; height: 4px; background: var(--primary-main); margin: 20px auto;"></div>
+        </div>
+    </div>
+
+    <!-- WEATHER STATUS BANNER -->
+    <div class="weather-banner">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="fw-bold mb-2">📍 Current Location: {{ city }}, {{ state }}</h5>
+                <p class="mb-0" style="font-size: 1.1rem; opacity: 0.95;">
+                    🌡️ {{ weather.temp|default:"25" }}°C &nbsp;|&nbsp;
+                    💧 {{ weather.humidity|default:"65" }}% &nbsp;|&nbsp;
+                    {{ weather.description|default:"Clear Sky"|title }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if total_water_saved > 0 %}
+                <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 15px;">
+                    <h3 class="fw-bold mb-0" style="color: #FFEB3B;">💰 {{ total_water_saved|floatformat:0 }}L</h3>
+                    <small>Water Saved Today!</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- FORECAST STABILITY ALERT (if unstable) -->
+    {% if forecast_analysis and forecast_analysis.stability_score != 'STABLE' %}
+    <div class="alert alert-{{ forecast_analysis.stability_color }} mb-4" style="border-left: 5px solid;">
+        <h6 class="fw-bold">⚠️ Weather Alert: {{ forecast_analysis.stability_score }}</h6>
+        <p class="mb-0">{{ forecast_analysis.warnings.0 }}</p>
+    </div>
+    {% endif %}
+
+    <!-- CROP CARDS -->
+    <div class="row g-4">
+        {% for item in planned_data %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- CARD HEADER -->
+                <div class="p-4" style="background: linear-gradient(135deg, var(--primary-deep), var(--primary-main));">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="text-white fw-bold mb-0">{{ item.obj.name|title }}</h3>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">{{ item.season }}</span>
+                    </div>
+                    <div class="text-white-50 mt-1">Area: {{ item.obj.area }} Acres</div>
+                </div>
+
+                <!-- WEATHER ALERTS FOR THIS CROP -->
+                {% if item.weather_alerts %}
+                <div class="px-3 pt-3" style="background: #F9FBF9;">
+                    {% for alert in item.weather_alerts %}
+                    <div class="alert-badge alert-{{ alert.type }}">
+                        {{ alert.icon }} {{ alert.message_en }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- RESOURCE CALCULATIONS -->
+                <div class="card-body p-4 bg-white">
+                    <h6 class="text-uppercase text-muted fw-bold small mb-4">Required Supplies</h6>
+
+                    <!-- WATER (with multiplier indicator) -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">💧</div>
+                        <div style="flex: 1;">
+                            <div class="small text-muted">Water Needed</div>
+                            <div class="h5 fw-bold mb-0 text-primary">{{ item.water }} L</div>
+                            {% if item.water_multiplier != 1.0 %}
+                            <small class="text-muted">
+                                {% if item.water_multiplier == 0 %}
+                                (Saved due to rain ✅)
+                                {% elif item.water_multiplier > 1 %}
+                                (+{{ item.water_change_percent }}% increase)
+                                {% else %}
+                                (-{{ item.water_change_percent }}% reduced ✅)
+                                {% endif %}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">🧪</div>
+                        <div>
+                            <div class="small text-muted">Urea/Fertilizer</div>
+                            <div class="h5 fw-bold mb-0 text-danger">{{ item.urea }} Kg</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">🌱</div>
+                        <div>
+                            <div class="small text-muted">Quality Seeds</div>
+                            <div class="h5 fw-bold mb-0 text-success">{{ item.seeds }} Kg</div>
+                        </div>
+                    </div>
+
+                    <!-- IRRIGATION ADVICE -->
+                    <div class="pt-3 border-top">
+                        <strong style="font-size: 0.85rem; color: var(--primary-deep);">💡 Today's Action:</strong>
+                        <p class="mb-2 mt-1" style="font-size: 0.9rem; font-weight: 600;">{{ item.irrigation_advice }}
+                        </p>
+                    </div>
+
+                    <!-- CALCULATION DETAILS - Add this after IRRIGATION ADVICE -->
+<div class="mt-2 p-2 bg-light rounded">
+    <details>
+        <summary class="text-muted small">📊 Show Calculation</summary>
+        <div class="mt-2">
+            <small>
+                <strong>Formula:</strong> Land × Weather × Location<br>
+                • <strong>Land:</strong> {{ item.obj.area }} acres × 
+                {% if item.season == 'Kharif/Rabi' or item.obj.name|lower == 'rice' %}
+                15,000 L/acre
+                {% elif item.season == 'Rabi' or item.obj.name|lower == 'wheat' %}
+                12,000 L/acre  
+                {% elif item.season == 'Kharif' or item.obj.name|lower == 'cotton' %}
+                13,000 L/acre
+                {% else %}
+                12,000 L/acre
+                {% endif %}<br>
+                
+                • <strong>Weather:</strong> 
+                {% if item.water_multiplier == 0 %}
+                ×0.0 (Rain today)
+                {% elif item.water_multiplier > 1 %}
+                ×{{ item.water_multiplier|floatformat:2 }} (+{{ item.water_change_percent }}%)
+                {% elif item.water_multiplier < 1 %}
+                ×{{ item.water_multiplier|floatformat:2 }} (-{{ item.water_change_percent }}%)
+                {% else %}
+                ×1.0 (Normal)
+                {% endif %}<br>
+                
+                • <strong>Location:</strong> {{ city }} 
+                {% if 'mumbai' in city.lower or 'chennai' in city.lower or 'kolkata' in city.lower %}
+                (Coastal ×0.85)
+                {% elif 'jaipur' in city.lower or 'jodhpur' in city.lower %}
+                (Arid ×1.25)  
+                {% else %}
+                (Inland ×1.0)
+                {% endif %}<br>
+                
+                <em class="text-success">Final: {{ item.water }} L</em>
+            </small>
+        </div>
+    </details>
+</div>
+
+                    <!-- STATE RISK ALERT (if applicable) -->
+                    {% if item.state_alert %}
+                    <div class="mt-3 p-2"
+                        style="background: #FFF3E0; border-left: 4px solid #F57F17; border-radius: 5px;">
+                        <small class="fw-bold" style="color: #F57F17;">{{ item.state_alert.icon }} {{
+                            item.state_alert.name_en }}</small>
+                        <p class="mb-0 mt-1" style="font-size: 0.75rem; color: #666;">{{ item.state_alert.farm_impact_en
+                            }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- OPTIMIZATION SCORE -->
+                    <div class="pt-3 border-top mt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold">Weather Optimization</span>
+                            <span class="small fw-bold text-success">{{ item.efficiency_score }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px;">
+                            <div class="progress-bar bg-success" style="width: {{ item.efficiency_score }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- WATER SAVINGS HIGHLIGHT -->
+                    {% if item.water_saved > 0 %}
+                    <div class="savings-highlight mt-3">
+                        <strong style="color: var(--primary-deep); font-size: 0.9rem;">💰 Water Saved: {{
+                            item.water_saved|floatformat:0 }} Liters</strong>
+                        <p class="mb-0 mt-1" style="font-size: 0.8rem; color: #666;">Due to rain forecast - saves cost &
+                            resources!</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-light border-0 py-3 text-center">
+                    <small class="text-muted fst-italic">"Weather-adjusted precision data"</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="display-1">🏜️</div>
+            <h3 class="text-muted mt-3">No crops found!</h3>
+            <p>Add your crops in 'My Crops' section first.</p>
+            <a href="{% url 'add_crop' %}" class="btn btn-success rounded-pill px-4">Add Crop Now</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- TOTAL SUMMARY -->
+    {% if planned_data %}
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #E8F5E9, #F1F8E9);">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3" style="color: var(--primary-deep);">📊 Farm Summary</h5>
+                    <div class="row text-center g-3">
+                        <div class="col-md-3">
+                            <h3 class="fw-bold" style="color: var(--primary-main);">{{ crop_count }}</h3>
+                            <small class="text-muted">Total Crops</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="fw-bold" style="color: var(--primary-main);">{{ total_area }}</h3>
+                            <small class="text-muted">Total Acres</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="fw-bold" style="color: #1976D2;">{{ weather.temp }}°C</h3>
+                            <small class="text-muted">Current Temp</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="fw-bold" style="color: #2E7D32;">{{ total_water_saved|floatformat:0 }}L</h3>
+                            <small class="text-muted">Water Saved</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT BUTTON -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <button onclick="window.print()" class="btn btn-dark btn-lg rounded-pill shadow px-5">
+                🖨️ Download Plan as PDF
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* 1. PALETTE VARIABLES */
+:root {
+    --primary-deep: #1B5E20;      
+    --primary-main: #2E7D32;      
+    --primary-light: #E8F5E9;     
+    --accent-earth: #795548;      
+    --bg-light: #F9FBF9;          
+    --text-main: #212121;
+    --text-muted: #616161;
+}
+
+.weather-page-container {
+    background-color: var(--bg-light);
+    min-height: 100vh;
+    padding: 30px 0;
+    color: var(--text-main);
+}
+
+/* 2. HEADER & BACK BUTTON */
+.page-header-compact {
+    background: white;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid var(--primary-main);
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary-deep);
+    margin: 0;
+}
+
+.title-hindi {
+    font-size: 1.1rem;
+    color: var(--primary-main);
+    font-weight: 600;
+}
+
+/* 3. SEARCH BAR */
+.city-search-compact {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 25px;
+    border: 1px solid #E0E0E0;
+}
+
+.btn-search {
+    background: var(--primary-main);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-search:hover { background: var(--primary-deep); transform: translateY(-1px); }
+
+/* 4. WEATHER DISPLAY */
+.weather-display-compact {
+    background: linear-gradient(135deg, #E3F2FD 0%, #F1F8E9 100%);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid #C8E6C9;
+    margin-bottom: 25px;
+}
+
+.weather-stat-inline {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.85);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid white;
+    height: 100%;
+}
+
+.weather-stat-inline .icon { font-size: 2.2rem; margin-right: 15px; }
+
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* 5. ANALYSIS TABLE */
+.analysis-card-compact {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.table-header-compact {
+    background: var(--primary-deep);
+    color: white;
+    padding: 15px 25px;
+}
+
+.crop-table-sleek th {
+    background: #F8F9FA;
+    padding: 15px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #555;
+    text-transform: uppercase;
+    border-bottom: 2px solid #EEE;
+}
+
+.status-badge-compact {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+    margin: 2px;
+}
+
+.badge-success { background: #E8F5E9; color: #2E7D32; border: 1px solid #2E7D32; }
+.badge-warning { background: #FFFDE7; color: #F57F17; border: 1px solid #FBC02D; }
+.badge-danger { background: #FFEBEE; color: #C62828; border: 1px solid #D32F2F; }
+.badge-info { background: #E3F2FD; color: #1976D2; border: 1px solid #1976D2; }
+
+.btn-back {
+    background: #F5F5F5;
+    color: #444;
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid #DDD;
+}
+
+/* 6. NEW STYLES - 7-DAY FORECAST */
+.forecast-table-minimal {
+    width: 100%;
+    font-size: 0.85rem;
+}
+
+.forecast-table-minimal td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #EEE;
+}
+
+.forecast-table-minimal tr:hover {
+    background: #F9F9F9;
+}
+
+.temp-range {
+    font-weight: 700;
+    color: var(--primary-deep);
+}
+
+/* 7. STABILITY INDICATOR */
+.stability-card {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.stability-stable {
+    background: #E8F5E9;
+    border-left: 6px solid #2E7D32;
+}
+
+.stability-warning {
+    background: #FFFDE7;
+    border-left: 6px solid #F57F17;
+}
+
+.stability-danger {
+    background: #FFEBEE;
+    border-left: 6px solid #C62828;
+}
+
+.stability-score-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-left: 10px;
+}
+
+.stability-score-stable {
+    background: #2E7D32;
+    color: white;
+}
+
+.stability-score-warning {
+    background: #F57F17;
+    color: white;
+}
+
+.stability-score-danger {
+    background: #C62828;
+    color: white;
+}
+
+/* 8. STATE RISK ALERTS */
+.risk-alert-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 5px solid;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.risk-alert-danger {
+    border-left-color: #C62828;
+    background: linear-gradient(90deg, #FFEBEE 0%, white 100%);
+}
+
+.risk-alert-warning {
+    border-left-color: #F57F17;
+    background: linear-gradient(90deg, #FFFDE7 0%, white 100%);
+}
+
+.risk-alert-info {
+    border-left-color: #1976D2;
+    background: linear-gradient(90deg, #E3F2FD 0%, white 100%);
+}
+
+@media (max-width: 768px) {
+    .page-header-compact { flex-direction: column; text-align: center; gap: 15px; }
+}
+</style>
+
+<div class="weather-page-container">
+    <div class="container">
+        
+        <div class="page-header-compact">
+            <div>
+                <h1 class="page-title">🌤️ Weather Analysis <span class="title-hindi">/ मौसम विश्लेषण</span></h1>
+                <p class="text-muted mb-0 fw-bold" style="font-size: 0.85rem;">Advanced forecast & risk analysis / उन्नत पूर्वानुमान और जोखिम विश्लेषण</p>
+            </div>
+            <a href="{% url 'dashboard' %}" class="btn-back">← BACK / पीछे जाएं</a>
+        </div>
+
+        <div class="city-search-compact">
+            <form method="GET" action="{% url 'weather' %}" class="row g-2 align-items-center">
+                <div class="col-md-9">
+                    <input type="text" name="city" class="form-control border-0" style="font-weight: 600;" placeholder="Search City / शहर खोजें..." value="{{ city }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn-search w-100">🔍 SEARCH / खोजें</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- FARM PRIORITY CARD -->
+        {% if farm_summary %}
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div style="background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%); border-radius: 15px; padding: 25px; color: white; box-shadow: 0 6px 20px rgba(27,94,32,0.3);">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="fw-bold mb-2" style="font-size: 1.3rem;">🌾 TODAY'S FARM PRIORITY / आज की प्राथमिकता</h5>
+                            <h3 class="fw-bold mb-3" style="font-size: 1.8rem; text-transform: uppercase; letter-spacing: 1px;">
+                                🎯 {{ farm_summary.primary_action_en }}
+                            </h3>
+                            <p class="mb-2" style="font-size: 1rem; opacity: 0.95;">
+                                💡 <strong>Tip:</strong> {{ farm_summary.weather_tip_en }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div style="background: rgba(255,255,255,0.2); border-radius: 12px; padding: 15px; backdrop-filter: blur(10px);">
+                                <div class="d-flex justify-content-around align-items-center">
+                                    <div>
+                                        <h2 class="fw-bold mb-0" style="font-size: 2.5rem; color: #FFEB3B;">{{ farm_summary.crops_under_stress }}</h2>
+                                        <small style="opacity: 0.9;">⚠️ URGENT</small>
+                                    </div>
+                                    <div>
+                                        <h2 class="fw-bold mb-0" style="font-size: 2.5rem; color: #FFC107;">{{ farm_summary.crops_needing_monitoring }}</h2>
+                                        <small style="opacity: 0.9;">💡 MONITOR</small>
+                                    </div>
+                                    <div>
+                                        <h2 class="fw-bold mb-0" style="font-size: 2.5rem; color: #8BC34A;">{{ farm_summary.crops_doing_well }}</h2>
+                                        <small style="opacity: 0.9;">✅ GOOD</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 7-DAY WEATHER STABILITY ANALYSIS -->
+        {% if forecast_analysis %}
+        <div class="stability-card stability-{{ forecast_analysis.stability_color }}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: var(--primary-deep);">📊 7-Day Weather Stability / 7-दिवसीय मौसम स्थिरता</h5>
+                    <p class="mb-0 text-muted" style="font-size: 0.85rem;">{{ city }}, {{ state }}</p>
+                </div>
+                <span class="stability-score-badge stability-score-{{ forecast_analysis.stability_color }}">
+                    {{ forecast_analysis.stability_score }}
+                </span>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <p class="mb-2"><strong>📈 Analysis:</strong> {{ forecast_summary_en }}</p>
+                    
+                    {% if forecast_analysis.warnings %}
+                    <div class="mt-3">
+                        <strong>⚠️ Key Warnings:</strong>
+                        <ul class="mb-0 mt-2" style="font-size: 0.9rem;">
+                            {% for warning in forecast_analysis.warnings %}
+                            <li>{{ warning }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4 text-center">
+                    <div style="background: rgba(255,255,255,0.6); border-radius: 10px; padding: 15px;">
+                        <div class="mb-2">
+                            <h3 class="fw-bold mb-0" style="color: #C62828;">{{ forecast_analysis.fluctuation_count }}</h3>
+                            <small class="text-muted">Sudden Changes</small>
+                        </div>
+                        <div class="mb-2">
+                            <h3 class="fw-bold mb-0" style="color: #F57F17;">{{ forecast_analysis.max_consecutive_hot }}</h3>
+                            <small class="text-muted">Consecutive Hot Days</small>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0" style="color: #1976D2;">{{ forecast_analysis.rain_days }}</h3>
+                            <small class="text-muted">Rain Expected</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 7-DAY FORECAST TABLE -->
+        {% if forecast_data %}
+        <div class="analysis-card-compact mb-4">
+            <div class="table-header-compact">
+                <h5 class="mb-0 fw-bold">📅 7-Day Forecast <span style="font-size: 0.9rem; opacity: 0.9;">/ 7-दिवसीय पूर्वानुमान</span></h5>
+            </div>
+            <div class="table-responsive">
+                <table class="forecast-table-minimal">
+                    <thead style="background: #F8F9FA;">
+                        <tr>
+                            <th style="padding: 12px 15px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">Date</th>
+                            <th style="padding: 12px 15px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">Temperature</th>
+                            <th style="padding: 12px 15px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">Humidity</th>
+                            <th style="padding: 12px 15px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in forecast_data %}
+                        <tr>
+                            <td><strong>{{ day.date }}</strong></td>
+                            <td>
+                                <span class="temp-range">{{ day.temp_max }}°C</span> / 
+                                <span style="color: #666;">{{ day.temp_min }}°C</span>
+                            </td>
+                            <td>{{ day.humidity_avg }}%</td>
+                            <td>
+                                {% if day.rain_probability %}
+                                <span style="color: #1976D2;">🌧️ {{ day.description|title }}</span>
+                                {% else %}
+                                {{ day.description|title }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- STATE-BASED EXTREME WEATHER RISKS -->
+        {% if state_risks %}
+        <div class="analysis-card-compact mb-4">
+            <div class="table-header-compact">
+                <h5 class="mb-0 fw-bold">🌍 Regional Weather Risks <span style="font-size: 0.9rem; opacity: 0.9;">/ क्षेत्रीय मौसम जोखिम</span></h5>
+                <p class="mb-0 mt-1" style="font-size: 0.85rem; opacity: 0.9;">{{ state_risk_summary_en }}</p>
+            </div>
+            <div class="p-3">
+                {% for risk in state_risks %}
+                <div class="risk-alert-card risk-alert-{{ risk.alert_type }}">
+                    <div class="d-flex align-items-start">
+                        <div style="font-size: 2rem; margin-right: 15px;">{{ risk.icon }}</div>
+                        <div style="flex: 1;">
+                            <h6 class="fw-bold mb-2" style="color: var(--primary-deep);">{{ risk.name_en }}</h6>
+                            <p class="mb-2" style="font-size: 0.9rem;">{{ risk.message_en }}</p>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <strong style="font-size: 0.8rem; color: #666;">General Action:</strong>
+                                    <p class="mb-0" style="font-size: 0.85rem;">{{ risk.suggested_action_en }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong style="font-size: 0.8rem; color: #666;">Farm Impact:</strong>
+                                    <p class="mb-0" style="font-size: 0.85rem;">{{ risk.farm_impact_en }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CURRENT WEATHER DISPLAY -->
+        <div class="weather-display-compact">
+            <h6 class="fw-bold mb-3" style="color: var(--primary-deep);">📍 {{ city }}, {{ state }} <span class="opacity-50 mx-2">|</span> Current Status / अभी की स्थिति</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="weather-stat-inline">
+                        <div class="icon">🌡️</div>
+                        <div class="data">
+                            <span class="stat-label">Temp / तापमान</span>
+                            <h3 class="mb-0 fw-bold">{{ temp }}°C</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="weather-stat-inline">
+                        <div class="icon">💧</div>
+                        <div class="data">
+                            <span class="stat-label">Humidity / नमी</span>
+                            <h3 class="mb-0 fw-bold">{{ humidity }}%</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="weather-stat-inline">
+                        <div class="icon">🌤️</div>
+                        <div class="data">
+                            <span class="stat-label">Sky / आसमान</span>
+                            <h3 class="mb-0 fw-bold" style="font-size: 1.2rem;">{{ description|title }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CROP SUITABILITY TABLE -->
+        <div class="analysis-card-compact">
+            <div class="table-header-compact">
+                <h5 class="mb-0 fw-bold">📊 Crop Suitability <span style="font-size: 0.9rem; opacity: 0.9;">/ फसल अनुकूलता</span></h5>
+            </div>
+            
+            {% if all_crop_insights %}
+            <div class="table-responsive">
+                <table class="table mb-0 crop-table-sleek align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Crop Name <br>/ फसल</th>
+                            <th>Status Alert <br>/ चेतावनी</th>
+                            <th class="pe-4">Action Required <br>/ ज़रूरी कदम</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in all_crop_insights %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ item.crop.name|title }}</div>
+                                <small class="text-muted fw-bold">{{ item.crop.area }} Acres</small>
+                            </td>
+                            <td>
+                                {% for insight in item.insights %}
+                                <span class="status-badge-compact badge-{{ insight.alert_type }}">
+                                    {{ insight.icon }} {{ insight.message_en }}
+                                </span>
+                                {% endfor %}
+                            </td>
+                            <td class="pe-4">
+                                <ul class="mb-0 ps-3 fw-bold" style="font-size: 0.85rem; color: #444;">
+                                    {% for insight in item.insights %}
+                                    <li>{{ insight.suggested_action_en }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div style="font-size: 3rem;">🌱</div>
+                <p class="text-muted fw-bold">No crops found. Add crops to see analysis. <br> कोई फसल नहीं मिली। विश्लेषण के लिए फसलें जोड़ें।</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- PRIORITY ACTIONS CHECKLIST -->
+        {% if priority_actions %}
+        <div class="analysis-card-compact my-4">
+            <div class="table-header-compact">
+                <h5 class="mb-0 fw-bold">📋 ACTION CHECKLIST <span style="font-size: 0.9rem; opacity: 0.9;">/ कार्य सूची</span></h5>
+            </div>
+            <div class="p-3">
+                {% for action in priority_actions %}
+                <div class="d-flex align-items-center mb-3 pb-3" style="border-bottom: 1px solid #EEE;">
+                    <div style="min-width: 80px;">
+                        {% if action.urgency == 'high' %}
+                        <span class="badge bg-danger" style="font-size: 0.75rem; padding: 6px 12px;">⚠️ URGENT</span>
+                        {% elif action.urgency == 'medium' %}
+                        <span class="badge bg-warning text-dark" style="font-size: 0.75rem; padding: 6px 12px;">💡 MONITOR</span>
+                        {% else %}
+                        <span class="badge bg-success" style="font-size: 0.75rem; padding: 6px 12px;">✅ NORMAL</span>
+                        {% endif %}
+                    </div>
+                    <div class="ms-3" style="flex: 1;">
+                        <div class="fw-bold text-success mb-1" style="font-size: 1rem;">
+                            {{ action.icon }} {{ action.crop }} <span class="text-muted" style="font-size: 0.85rem;">({{ action.crop_area }} Acres)</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #555;">{{ action.action_en }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TEMPERATURE & HUMIDITY ADVICE -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="tip-card-compact" style="background:white; border-radius:12px; padding:20px; border-left:6px solid var(--accent-earth); height:100%;">
+                    <h6 class="fw-bold" style="color: var(--accent-earth);">🌡️ Temperature Advice / तापमान सलाह</h6>
+                    {% if temp > 35 %}
+                        <p class="small mb-0 fw-bold text-muted">Water early morning to prevent loss. / वाष्पीकरण रोकने के लिए सुबह जल्दी सिंचाई करें।</p>
+                    {% else %}
+                        <p class="small mb-0 fw-bold text-success">✅ Conditions are favorable. / मौसम अभी अनुकूल है।</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="tip-card-compact" style="background:white; border-radius:12px; padding:20px; border-left:6px solid #0277BD; height:100%;">
+                    <h6 class="fw-bold" style="color: #0277BD;">💧 Humidity Advice / नमी सलाह</h6>
+                    {% if humidity > 80 %}
+                        <p class="small mb-0 fw-bold text-muted">Monitor for fungal infections. / फफूंद रोगों के लिए निगरानी रखें।</p>
+                    {% else %}
+                        <p class="small mb-0 fw-bold text-success">✅ Normal humidity levels. / नमी का स्तर सामान्य है।</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

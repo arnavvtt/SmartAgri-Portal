@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+:root {
+    --primary-deep: #1B5E20;
+    --primary-main: #2E7D32;
+    --bg-light: #F9FBF9;
+}
+
+.add-crop-container {
+    min-height: 90vh;
+    background-color: var(--bg-light);
+    padding: 40px 0;
+}
+
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-top: 8px solid var(--primary-main);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-deep);
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.title-hindi {
+    font-size: 1.2rem;
+    color: var(--primary-main);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.form-label {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.form-input {
+    height: 55px;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+    padding: 0 15px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.form-input:focus {
+    border-color: var(--primary-main);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
+.btn-submit {
+    background: linear-gradient(45deg, var(--primary-main), var(--primary-deep));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 40px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    width: 100%;
+    margin-top: 20px;
+    transition: all 0.3s;
+    box-shadow: 0 6px 20px rgba(46, 125, 50, 0.3);
+    cursor: pointer;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.4);
+}
+
+/* SIMPLE SUCCESS MESSAGE */
+.success-alert {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-left: 5px solid #2E7D32;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="add-crop-container">
+    <div class="container">
+        
+        <!-- SIMPLE SUCCESS MESSAGE (if any) -->
+        {% if messages %}
+        <div class="success-alert">
+            <div class="d-flex align-items-center">
+                <div style="font-size: 1.8rem; color: #2E7D32; margin-right: 15px;">✅</div>
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: #1B5E20;">Crop Added!</h5>
+                    <p class="mb-0 text-muted">फसल सफलतापूर्वक जोड़ दी गई है।</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="form-card">
+            <h1 class="form-title">Register New Crop</h1>
+            <span class="title-hindi">नई फसल जोड़ें</span>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label">Crop Name / फसल का नाम</label>
+                    <input type="text" name="name" class="form-input" placeholder="e.g., Wheat, Rice, Potato" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Season / मौसम</label>
+                    <select name="season" class="form-input" required>
+                        <option value="">Select Season</option>
+                        <option value="Rabi">Rabi (Winter)</option>
+                        <option value="Kharif">Kharif (Monsoon)</option>
+                        <option value="Zaid">Zaid (Summer)</option>
+                        <option value="All Season">All Season</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Area (in Acres) / क्षेत्रफल (एकड़ में)</label>
+                    <input type="number" name="area" class="form-input" placeholder="e.g., 2.5" step="0.1" min="0.1" required>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    Save Crop / फसल सहेजें
+                </button>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'my_crops' %}" class="text-muted text-decoration-none">
+                        ← View My Crops
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SIMPLE FORM SUBMIT SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Show loading state on button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Saving... <span class="spinner-border spinner-border-sm"></span>';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

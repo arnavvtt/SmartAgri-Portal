@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Smart Agriculture Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        /* --- GLOBAL ORGANIC SYSTEM --- */
+        :root {
+            --primary-deep: #1B5E20;      /* Deep Forest Green */
+            --primary-main: #2E7D32;      /* Leaf Green */
+            --primary-light: #E8F5E9;     /* Mint Tint */
+            --bg-canvas: #F9FBF9;         /* Off-white */
+            --text-main: #212121;
+            --text-muted: #616161;
+            --error-red: #D32F2F;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- LOGIN CARD --- */
+        .login-container {
+            background: #ffffff;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            border-bottom: 6px solid var(--primary-main); /* Grounded indicator */
+            box-shadow: 0 15px 35px rgba(27, 94, 32, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--primary-deep);
+            font-weight: 800;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        /* --- FORM ELEMENTS --- */
+        label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--primary-deep);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group::before {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            z-index: 2;
+        }
+
+        .user::before { content: "👤"; }
+        .lock::before { content: "🔑"; }
+
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 42px;
+            border-radius: 10px;
+            border: 2px solid #E0E0E0;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            background: #FDFDFD;
+        }
+
+        input:focus {
+            border-color: var(--primary-main);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+        }
+
+        /* --- PRIMARY ACTION --- */
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-main);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(27, 94, 32, 0.2);
+        }
+
+        /* --- ALERTS --- */
+        .error {
+            background: #FFEBEE;
+            color: var(--error-red);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid #FFCDD2;
+        }
+
+        /* --- FOOTER --- */
+        .footer-text {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .footer-text a {
+            color: var(--primary-main);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-container">
+    <h2>Welcome Back 🌾</h2>
+    <p class="subtitle">Secure login for your Smart Farm</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Username</label>
+        <div class="input-group user">
+            <input type="text" name="username" placeholder="Your username" required>
+        </div>
+
+        <label>Password</label>
+        <div class="input-group lock">
+            <input type="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit">Login to Dashboard</button>
+    </form>
+
+    {% if error %}
+        <p class="error">⚠️ {{ error }}</p>
+    {% endif %}
+
+    <div class="footer-text">
+        New to the portal? 
+        <a href="/register/">Register here</a>
+        <div style="margin-top: 15px; font-size: 0.75rem; opacity: 0.7;">
+            🌱 Empowering Agriculture through Technology
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+
